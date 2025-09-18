@@ -26,8 +26,10 @@ Fill in the following settings:
 - **Runtime**: `Node`
 
 ### Build Settings
-- **Build Command**: `npm install`
+- **Build Command**: `npm install --legacy-peer-deps`
 - **Start Command**: `npm start`
+
+**Note**: We use `--legacy-peer-deps` to resolve a dependency conflict between multer v1.4.x and multer-gridfs-storage v5.x.
 
 ### Advanced Settings
 - **Auto-Deploy**: `Yes` (recommended)

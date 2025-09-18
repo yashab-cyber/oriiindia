@@ -16,7 +16,7 @@
   - [ ] Branch: main
   - [ ] Root Directory: backend
   - [ ] Runtime: Node
-  - [ ] Build Command: npm install
+  - [ ] Build Command: npm install --legacy-peer-deps
   - [ ] Start Command: npm start
 
 ## Environment Variables
