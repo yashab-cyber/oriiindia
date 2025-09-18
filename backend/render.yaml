@@ -20,7 +20,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: FRONTEND_URL
-        value: https://your-frontend-url.vercel.app
+        value: https://oriiindia0.vercel.app
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT
