@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import dashboardAPI from '@/lib/dashboardAPI';
 import { 
   DocumentTextIcon,
   CalendarIcon,
@@ -13,9 +14,42 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline';
 
+interface UserStats {
+  papersCount: number;
+  upcomingEventsCount: number;
+  collaboratorsCount: number;
+  totalViews: number;
+}
+
+interface Paper {
+  _id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  views?: number;
+}
+
+interface Event {
+  _id: string;
+  title: string;
+  startDate: string;
+  location: string;
+  type: string;
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<UserStats>({
+    papersCount: 0,
+    upcomingEventsCount: 0,
+    collaboratorsCount: 0,
+    totalViews: 0
+  });
+  const [recentPapers, setRecentPapers] = useState<Paper[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,86 +64,82 @@ export default function Dashboard() {
     
     setUser(JSON.parse(userData));
     setIsLoading(false);
+
+    // Load dashboard data
+    loadDashboardData();
   }, [router]);
 
-  const stats = [
+  const loadDashboardData = async () => {
+    setDataLoading(true);
+    setError(null);
+
+    try {
+      // Load all dashboard data in parallel
+      const [statsData, papersData, eventsData] = await Promise.all([
+        dashboardAPI.getUserStats(),
+        dashboardAPI.getUserPapers(),
+        dashboardAPI.getUpcomingEvents()
+      ]);
+
+      setStats(statsData);
+      setRecentPapers((papersData.data || []).slice(0, 3)); // Show only recent 3
+      setUpcomingEvents((eventsData.data || []).slice(0, 3)); // Show only upcoming 3
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  const statsDisplay = [
     {
       name: 'Research Papers',
-      value: '12',
+      value: stats.papersCount.toString(),
       icon: DocumentTextIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       name: 'Upcoming Events',
-      value: '3',
+      value: stats.upcomingEventsCount.toString(),
       icon: CalendarIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
       name: 'Collaborators',
-      value: '25',
+      value: stats.collaboratorsCount.toString(),
       icon: UsersIcon,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
-      name: 'Citations',
-      value: '184',
+      name: 'Total Views',
+      value: stats.totalViews.toString(),
       icon: ChartBarIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
     },
   ];
 
-  const recentPapers = [
-    {
-      id: 1,
-      title: 'Machine Learning Applications in Climate Research',
-      status: 'Published',
-      date: '2024-03-15',
-      views: 245,
-    },
-    {
-      id: 2,
-      title: 'Sustainable Energy Solutions for Rural India',
-      status: 'Under Review',
-      date: '2024-03-10',
-      views: 89,
-    },
-    {
-      id: 3,
-      title: 'AI-Driven Healthcare Diagnostics',
-      status: 'Draft',
-      date: '2024-03-08',
-      views: 12,
-    },
-  ];
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: 'International Climate Conference 2024',
-      date: '2024-04-15',
-      location: 'Virtual',
-      type: 'Conference',
-    },
-    {
-      id: 2,
-      title: 'AI Workshop Series',
-      date: '2024-04-20',
-      location: 'Delhi, India',
-      type: 'Workshop',
-    },
-    {
-      id: 3,
-      title: 'Research Collaboration Meetup',
-      date: '2024-04-25',
-      location: 'Bangalore, India',
-      type: 'Meetup',
-    },
-  ];
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'published':
+        return 'bg-green-100 text-green-800';
+      case 'under review':
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -138,16 +168,40 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={loadDashboardData}
+                    className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => (
+          {statsDisplay.map((stat) => (
             <div key={stat.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center">
                 <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
                 <div className="ml-4">
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dataLoading ? '...' : stat.value}
+                  </p>
                   <p className="text-sm text-gray-600">{stat.name}</p>
                 </div>
               </div>
@@ -168,34 +222,42 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {recentPapers.map((paper) => (
-                  <div key={paper.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{paper.title}</h3>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          paper.status === 'Published' 
-                            ? 'bg-green-100 text-green-800'
-                            : paper.status === 'Under Review'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {paper.status}
-                        </span>
-                        <span className="text-sm text-gray-500">{paper.date}</span>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <EyeIcon className="h-4 w-4 mr-1" />
-                          {paper.views}
+              {dataLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : recentPapers.length === 0 ? (
+                <div className="text-center py-8">
+                  <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No research papers yet</p>
+                  <button className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Create your first paper
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentPapers.map((paper) => (
+                    <div key={paper._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900">{paper.title}</h3>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(paper.status)}`}>
+                            {paper.status}
+                          </span>
+                          <span className="text-sm text-gray-500">{formatDate(paper.createdAt)}</span>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            {paper.views || 0}
+                          </div>
                         </div>
                       </div>
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        View
+                      </button>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                      View
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -210,25 +272,39 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{event.title}</h3>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <span className="text-sm text-gray-500">{event.date}</span>
-                        <span className="text-sm text-gray-500">{event.location}</span>
-                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                          {event.type}
-                        </span>
+              {dataLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : upcomingEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No upcoming events</p>
+                  <button className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Browse events
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingEvents.map((event) => (
+                    <div key={event._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900">{event.title}</h3>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <span className="text-sm text-gray-500">{formatDate(event.startDate)}</span>
+                          <span className="text-sm text-gray-500">{event.location}</span>
+                          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            {event.type}
+                          </span>
+                        </div>
                       </div>
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        Join
+                      </button>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                      Join
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -237,19 +313,28 @@ export default function Dashboard() {
         <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
+            <button 
+              onClick={() => router.push('/research/submit')}
+              className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            >
               <div className="text-center">
                 <DocumentTextIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <span className="text-sm font-medium text-gray-700">Submit New Paper</span>
               </div>
             </button>
-            <button className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
+            <button 
+              onClick={() => router.push('/events')}
+              className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            >
               <div className="text-center">
                 <CalendarIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-700">Create Event</span>
+                <span className="text-sm font-medium text-gray-700">Browse Events</span>
               </div>
             </button>
-            <button className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
+            <button 
+              onClick={() => router.push('/people')}
+              className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            >
               <div className="text-center">
                 <UsersIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <span className="text-sm font-medium text-gray-700">Find Collaborators</span>
