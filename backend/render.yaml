@@ -3,7 +3,7 @@ services:
     name: orii-backend
     env: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install --legacy-peer-deps
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
