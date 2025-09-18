@@ -32,7 +32,7 @@ app.use(helmet());
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
   'http://localhost:3000',
-  'https://your-frontend-url.vercel.app' // Update this with your actual Vercel URL
+  'https://oriiindia0.vercel.app' // Your actual Vercel URL
 ];
 
 app.use(cors({
