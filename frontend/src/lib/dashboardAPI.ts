@@ -1,4 +1,5 @@
 import api from './api'
+import { Event } from '../types'
 
 // Dashboard API functions
 export const dashboardAPI = {
@@ -50,7 +51,7 @@ export const dashboardAPI = {
         }
       })
       const events = eventsResponse.data?.data || []
-      const upcomingEvents = events.filter(event => new Date(event.startDate) > new Date())
+      const upcomingEvents = events.filter((event: Event) => new Date(event.startDate) > new Date())
       
       // Calculate total views/citations from papers
       const totalViews = papers.reduce((sum: number, paper: any) => sum + (paper.views || 0), 0)
