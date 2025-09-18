@@ -181,7 +181,7 @@ const ResearchInterestsManager: React.FC<ResearchInterestsManagerProps> = ({
                 : `Maximum ${maxInterests} interests reached`
             }
             disabled={interests.length >= maxInterests}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black"
           />
           
           {/* Suggestions Dropdown */}
@@ -196,7 +196,7 @@ const ResearchInterestsManager: React.FC<ResearchInterestsManagerProps> = ({
                   type="button"
                   onClick={() => handleSuggestionClick(suggestion)}
                   className={`w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
-                    index === activeSuggestionIndex ? 'bg-blue-50 text-blue-800' : 'text-gray-700'
+                    index === activeSuggestionIndex ? 'bg-blue-50 text-blue-800' : 'text-black'
                   }`}
                 >
                   {suggestion}

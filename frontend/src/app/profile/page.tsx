@@ -360,7 +360,7 @@ const ProfilePage = () => {
                     name="firstName"
                     value={formData.firstName || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -377,7 +377,7 @@ const ProfilePage = () => {
                     name="lastName"
                     value={formData.lastName || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -394,7 +394,7 @@ const ProfilePage = () => {
                     name="email"
                     value={formData.email || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -411,7 +411,7 @@ const ProfilePage = () => {
                     rows={4}
                     value={formData.profile?.bio || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     placeholder="Tell us about yourself..."
                   />
                 </div>
@@ -446,7 +446,7 @@ const ProfilePage = () => {
                     name="profile.title"
                     value={formData.profile?.title || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     placeholder="e.g., Senior Researcher"
                   />
                 </div>
@@ -461,7 +461,7 @@ const ProfilePage = () => {
                     name="profile.department"
                     value={formData.profile?.department || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     placeholder="e.g., Computer Science"
                   />
                 </div>
@@ -476,7 +476,7 @@ const ProfilePage = () => {
                     name="profile.institution"
                     value={formData.profile?.institution || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     placeholder="e.g., Open Research Institute of India"
                   />
                 </div>
@@ -507,7 +507,7 @@ const ProfilePage = () => {
                     name="profile.website"
                     value={formData.profile?.website || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                       errors['profile.website'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="https://yourwebsite.com"
@@ -525,7 +525,7 @@ const ProfilePage = () => {
                     name="profile.linkedIn"
                     value={formData.profile?.linkedIn || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                       errors['profile.linkedIn'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="https://linkedin.com/in/yourprofile"
@@ -543,7 +543,7 @@ const ProfilePage = () => {
                     name="profile.orcid"
                     value={formData.profile?.orcid || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     placeholder="e.g., 0000-0000-0000-0000"
                   />
                 </div>
@@ -591,7 +591,7 @@ const ProfilePage = () => {
                       id="currentPassword"
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                         errors.currentPassword ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -607,7 +607,7 @@ const ProfilePage = () => {
                       id="newPassword"
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                         errors.newPassword ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -623,7 +623,7 @@ const ProfilePage = () => {
                       id="confirmPassword"
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${
                         errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />

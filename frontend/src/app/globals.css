@@ -28,6 +28,20 @@ input[type="datetime-local"],
 textarea,
 select {
   color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+/* Additional fix for any inputs without explicit type */
+input:not([type]),
+input[type=""] {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+/* Fix select dropdown options */
+select option {
+  color: #000000 !important;
+  background-color: #ffffff !important;
 }
 
 /* Ensure placeholder text remains visible but distinct */
@@ -47,5 +61,17 @@ textarea::placeholder {
   textarea,
   select {
     color: #ffffff !important;
+    background-color: #1f2937 !important; /* gray-800 */
+  }
+  
+  input:not([type]),
+  input[type=""] {
+    color: #ffffff !important;
+    background-color: #1f2937 !important;
+  }
+  
+  select option {
+    color: #ffffff !important;
+    background-color: #1f2937 !important;
   }
 }
