@@ -52,15 +52,15 @@ export default function PersonProfile() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'faculty':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-900/20 text-blue-400 border border-blue-800';
       case 'researcher':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-900/20 text-green-400 border border-green-800';
       case 'admin':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-900/20 text-purple-400 border border-purple-800';
       case 'student':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-900/20 text-yellow-400 border border-yellow-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-700 text-slate-300 border border-slate-600';
     }
   };
 
@@ -74,16 +74,16 @@ export default function PersonProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-300 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+            <div className="h-8 bg-slate-700 rounded w-3/4"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/2"></div>
             <div className="space-y-3">
-              <div className="h-4 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+              <div className="h-4 bg-slate-700 rounded"></div>
+              <div className="h-4 bg-slate-700 rounded"></div>
+              <div className="h-4 bg-slate-700 rounded w-5/6"></div>
             </div>
           </div>
         </div>
@@ -94,16 +94,16 @@ export default function PersonProfile() {
 
   if (error || !person) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <UserIcon className="mx-auto h-16 w-16 text-gray-400" />
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">Profile Not Found</h2>
-            <p className="mt-2 text-gray-600">{error}</p>
+            <UserIcon className="mx-auto h-16 w-16 text-slate-500" />
+            <h2 className="mt-4 text-2xl font-bold text-slate-100">Profile Not Found</h2>
+            <p className="mt-2 text-slate-400">{error}</p>
             <Link 
               href="/people"
-              className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to People
@@ -116,16 +116,16 @@ export default function PersonProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       
       {/* Header Section */}
-      <div className="bg-white border-b">
+      <div className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <Link 
               href="/people"
-              className="inline-flex items-center text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center text-slate-400 hover:text-slate-200 transition-colors"
             >
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to People
@@ -134,34 +134,36 @@ export default function PersonProfile() {
           
           <div className="flex items-start space-x-6">
             {/* Avatar */}
-            <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-              <UserIcon className="h-16 w-16 text-gray-400" />
+            <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-600">
+              <UserIcon className="h-16 w-16 text-slate-400" />
             </div>
             
             {/* Basic Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-slate-100 mb-2">
                 {person.firstName} {person.lastName}
               </h1>
               
-              <p className="text-xl text-blue-600 font-medium mb-3">
-                {person.profile.title}
-              </p>
+              {person.profile?.title && (
+                <p className="text-xl text-blue-400 font-medium mb-3">
+                  {person.profile.title}
+                </p>
+              )}
               
               <div className="flex items-center space-x-4 mb-4">
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(person.role)}`}>
                   {person.role.charAt(0).toUpperCase() + person.role.slice(1)}
                 </span>
-                {person.profile.department && (
-                  <div className="flex items-center text-gray-600">
+                {person.profile?.department && (
+                  <div className="flex items-center text-slate-400">
                     <AcademicCapIcon className="h-4 w-4 mr-2" />
                     <span>{person.profile.department}</span>
                   </div>
                 )}
               </div>
               
-              {person.profile.institution && (
-                <div className="flex items-center text-gray-600 mb-4">
+              {person.profile?.institution && (
+                <div className="flex items-center text-slate-400 mb-4">
                   <MapPinIcon className="h-4 w-4 mr-2" />
                   <span>{person.profile.institution}</span>
                 </div>
@@ -177,24 +179,24 @@ export default function PersonProfile() {
                   Contact
                 </a>
                 
-                {person.profile.website && (
+                {person.profile?.website && (
                   <a 
                     href={person.profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center px-4 py-2 border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 transition-colors"
                   >
                     <GlobeAltIcon className="h-4 w-4 mr-2" />
                     Website
                   </a>
                 )}
                 
-                {person.profile.linkedIn && (
+                {person.profile?.linkedIn && (
                   <a 
                     href={person.profile.linkedIn}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center px-4 py-2 border border-slate-600 text-slate-300 rounded-md hover:bg-slate-700 transition-colors"
                   >
                     <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z" clipRule="evenodd" />
@@ -214,24 +216,24 @@ export default function PersonProfile() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Biography */}
-            {person.profile.bio && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
-                <p className="text-gray-700 leading-relaxed">
+            {person.profile?.bio && (
+              <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
+                <h2 className="text-xl font-semibold text-slate-100 mb-4">About</h2>
+                <p className="text-slate-300 leading-relaxed">
                   {person.profile.bio}
                 </p>
               </div>
             )}
             
             {/* Research Interests */}
-            {person.profile.researchInterests && person.profile.researchInterests.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Research Interests</h2>
+            {person.profile?.researchInterests && person.profile.researchInterests.length > 0 && (
+              <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
+                <h2 className="text-xl font-semibold text-slate-100 mb-4">Research Interests</h2>
                 <div className="flex flex-wrap gap-2">
                   {person.profile.researchInterests.map((interest, index) => (
                     <span 
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-900/20 text-blue-400 hover:bg-blue-900/30 cursor-pointer border border-blue-800 transition-colors"
                     >
                       {interest}
                     </span>
@@ -345,31 +347,31 @@ export default function PersonProfile() {
                   </div>
                 )}
                 
-                {person.profile.institution && (
+                {person.profile?.institution && (
                   <div>
-                    <span className="font-medium text-gray-700">Institution:</span>
-                    <p className="text-gray-900">{person.profile.institution}</p>
+                    <span className="font-medium text-slate-300">Institution:</span>
+                    <p className="text-slate-100">{person.profile.institution}</p>
                   </div>
                 )}
                 
                 <div>
-                  <span className="font-medium text-gray-700">Member since:</span>
-                  <p className="text-gray-900">{formatDate(person.createdAt)}</p>
+                  <span className="font-medium text-slate-300">Member since:</span>
+                  <p className="text-slate-100">{formatDate(person.createdAt)}</p>
                 </div>
                 
                 {person.lastLogin && (
                   <div>
-                    <span className="font-medium text-gray-700">Last active:</span>
-                    <p className="text-gray-900">{formatDate(person.lastLogin)}</p>
+                    <span className="font-medium text-slate-300">Last active:</span>
+                    <p className="text-slate-100">{formatDate(person.lastLogin)}</p>
                   </div>
                 )}
               </div>
             </div>
             
             {/* Collaboration */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Collaborate</h3>
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4">Collaborate</h3>
+              <p className="text-sm text-slate-400 mb-4">
                 Interested in collaborating? Reach out to discuss potential research opportunities.
               </p>
               <a 
