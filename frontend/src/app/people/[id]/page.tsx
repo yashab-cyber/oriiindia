@@ -22,12 +22,14 @@ export default function PersonProfile() {
   const params = useParams();
   const router = useRouter();
   const [person, setPerson] = useState<User | null>(null);
+  const [publications, setPublications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (params.id) {
       fetchPerson(params.id as string);
+      fetchUserPublications(params.id as string);
     }
   }, [params.id]);
 
@@ -46,6 +48,25 @@ export default function PersonProfile() {
       setError('Failed to load person profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserPublications = async (userId: string) => {
+    try {
+      const response = await fetch(getApiUrl('/research'));
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.papers) {
+          // Filter papers where this user is an author
+          const userPublications = data.data.papers.filter((paper: any) => 
+            paper.authors.some((author: any) => author.user === userId)
+          );
+          setPublications(userPublications);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user publications:', error);
     }
   };
 
@@ -69,6 +90,13 @@ export default function PersonProfile() {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
+    });
+  };
+
+  const formatPublicationDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long'
     });
   };
 
@@ -242,38 +270,69 @@ export default function PersonProfile() {
               </div>
             )}
             
-            {/* Recent Publications (Placeholder) */}
+            {/* Recent Publications */}
             <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
               <h2 className="text-xl font-semibold text-slate-100 mb-4">Recent Publications</h2>
-              <div className="space-y-4">
-                <div className="border-l-4 border-blue-500 pl-4">
-                  <h3 className="font-medium text-slate-200">Machine Learning Applications in Climate Research</h3>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Published in Nature Climate Change • 2025
-                  </p>
-                  <p className="text-sm text-slate-500 mt-2">
-                    A comprehensive study on the application of machine learning techniques in climate modeling...
-                  </p>
+              {publications.length > 0 ? (
+                <div className="space-y-4">
+                  {publications.slice(0, 3).map((paper, index) => (
+                    <div key={paper._id} className="border-l-4 border-blue-500 pl-4">
+                      <Link 
+                        href={`/research/${paper._id}`}
+                        className="block hover:bg-slate-700/30 rounded p-2 -ml-2 transition-colors"
+                      >
+                        <h3 className="font-medium text-slate-200 hover:text-blue-400 transition-colors">{paper.title}</h3>
+                        <p className="text-sm text-slate-400 mt-1">
+                          {paper.publishedIn?.journal && (
+                            <>Published in {paper.publishedIn.journal}</>
+                          )}
+                          {paper.publishedIn?.publishedDate && (
+                            <> • {formatPublicationDate(paper.publishedIn.publishedDate)}</>
+                          )}
+                          {!paper.publishedIn?.journal && paper.status && (
+                            <>Status: {paper.status.charAt(0).toUpperCase() + paper.status.slice(1).replace('-', ' ')}</>
+                          )}
+                        </p>
+                        {paper.abstract && (
+                          <p className="text-sm text-slate-500 mt-2 line-clamp-2">
+                            {paper.abstract.length > 150 
+                              ? `${paper.abstract.substring(0, 150)}...` 
+                              : paper.abstract
+                            }
+                          </p>
+                        )}
+                        {paper.authors && paper.authors.length > 1 && (
+                          <p className="text-xs text-slate-500 mt-2">
+                            Co-authors: {paper.authors
+                              .filter((author: any) => author.user !== person?._id)
+                              .map((author: any) => author.name)
+                              .slice(0, 2)
+                              .join(', ')}
+                            {paper.authors.length > 3 && ' and others'}
+                          </p>
+                        )}
+                      </Link>
+                    </div>
+                  ))}
+                  {publications.length > 3 && (
+                    <div className="mt-4 text-center">
+                      <p className="text-sm text-slate-400">
+                        And {publications.length - 3} more publication{publications.length - 3 !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="border-l-4 border-green-500 pl-4">
-                  <h3 className="font-medium text-slate-200">Sustainable Technology Solutions for Environmental Challenges</h3>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Published in Environmental Science & Technology • 2024
-                  </p>
-                  <p className="text-sm text-slate-500 mt-2">
-                    Exploring innovative approaches to address environmental challenges through technology...
-                  </p>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-slate-400 mb-2">
+                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-sm">No publications found</p>
+                  <p className="text-slate-500 text-xs mt-1">Publications will appear here once submitted and approved</p>
                 </div>
-                <div className="border-l-4 border-purple-500 pl-4">
-                  <h3 className="font-medium text-slate-200">AI Ethics in Research: A Framework for Responsible Innovation</h3>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Published in AI & Society • 2024
-                  </p>
-                  <p className="text-sm text-slate-500 mt-2">
-                    Developing ethical frameworks for artificial intelligence applications in research...
-                  </p>
-                </div>
-              </div>
+              )}
               <div className="mt-6">
                 <Link 
                   href="/research"
