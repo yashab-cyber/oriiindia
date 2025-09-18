@@ -27,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en" className="dark">
+      <body className={`${inter.variable} font-sans antialiased bg-slate-900 text-slate-100`}>
         <AuthProvider>
           {children}
           <Toaster
@@ -36,8 +36,23 @@ export default function RootLayout({
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#363636',
-                color: '#fff',
+                background: '#1e293b',
+                color: '#f1f5f9',
+                border: '1px solid #475569',
+              },
+              success: {
+                style: {
+                  background: '#1e293b',
+                  color: '#10b981',
+                  border: '1px solid #059669',
+                },
+              },
+              error: {
+                style: {
+                  background: '#1e293b',
+                  color: '#ef4444',
+                  border: '1px solid #dc2626',
+                },
               },
             }}
           />

@@ -95,20 +95,20 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
-            <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+            <h2 className="mt-6 text-center text-3xl font-bold text-slate-100">
               Sign in to your account
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-center text-sm text-slate-400">
               Or{' '}
               <Link 
                 href="/auth/register" 
-                className="font-medium text-blue-600 hover:text-blue-500"
+                className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
               >
                 create a new account
               </Link>
@@ -116,15 +116,15 @@ export default function Login() {
           </div>
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="bg-white p-8 rounded-lg shadow-md space-y-6">
+            <div className="bg-slate-800 p-8 rounded-lg shadow-lg border border-slate-700 space-y-6">
               {errors.submit && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+                <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-md">
                   {errors.submit}
                 </div>
               )}
               
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
                   Email address
                 </label>
                 <input
@@ -135,18 +135,18 @@ export default function Login() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-3 py-3 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-3 border rounded-md shadow-sm placeholder-slate-500 bg-slate-700 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.email ? 'border-red-500' : 'border-slate-600'
                   }`}
                   placeholder="Enter your email"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.email}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -158,8 +158,8 @@ export default function Login() {
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className={`w-full px-3 py-3 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${
-                      errors.password ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full px-3 py-3 border rounded-md shadow-sm placeholder-slate-500 bg-slate-700 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${
+                      errors.password ? 'border-red-500' : 'border-slate-600'
                     }`}
                     placeholder="Enter your password"
                   />
@@ -169,14 +169,14 @@ export default function Login() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className="h-5 w-5 text-slate-400" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className="h-5 w-5 text-slate-400" />
                     )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.password}</p>
                 )}
               </div>
 
@@ -186,9 +186,9 @@ export default function Login() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-600 rounded bg-slate-700"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-300">
                     Remember me
                   </label>
                 </div>
@@ -196,7 +196,7 @@ export default function Login() {
                 <div className="text-sm">
                   <Link 
                     href="/auth/forgot-password" 
-                    className="font-medium text-blue-600 hover:text-blue-500"
+                    className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
                   >
                     Forgot your password?
                   </Link>
@@ -206,7 +206,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

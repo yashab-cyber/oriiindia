@@ -53,12 +53,12 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="absolute inset-0 bg-black opacity-30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center space-y-8">
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
@@ -72,7 +72,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 href="/research"
-                className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+                className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
               >
                 Explore Research
               </Link>
@@ -88,15 +88,15 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl lg:text-4xl font-bold text-blue-600 mb-2">
+                <div className="text-3xl lg:text-4xl font-bold text-blue-400 mb-2">
                   {stat.value}
                 </div>
-                <div className="text-gray-600 font-medium">
+                <div className="text-slate-300 font-medium">
                   {stat.label}
                 </div>
               </div>
@@ -106,13 +106,13 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-20 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-100 mb-4">
               Why Choose Orii?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
               We provide the infrastructure, community, and resources needed to conduct 
               world-class research and drive meaningful innovation.
             </p>
@@ -120,16 +120,16 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+              <div key={index} className="bg-slate-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-700 hover:border-slate-600">
                 <div className="flex items-center mb-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <feature.icon className="h-6 w-6 text-blue-600" />
+                  <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-800">
+                    <feature.icon className="h-6 w-6 text-blue-400" />
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                <h3 className="text-xl font-semibold text-slate-100 mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-slate-400 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -139,7 +139,7 @@ export default function Home() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-blue-600">
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to Start Your Research Journey?
@@ -151,7 +151,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/auth/register"
-              className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+              className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
             >
               Join Orii Today
             </Link>

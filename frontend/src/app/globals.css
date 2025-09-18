@@ -1,24 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Professional Dark Theme Color Palette */
+  --background: #0f172a; /* slate-900 */
+  --surface: #1e293b; /* slate-800 */
+  --surface-elevated: #334155; /* slate-700 */
+  --foreground: #f8fafc; /* slate-50 */
+  --foreground-muted: #cbd5e1; /* slate-300 */
+  --foreground-subtle: #94a3b8; /* slate-400 */
+  --border: #334155; /* slate-700 */
+  --border-subtle: #475569; /* slate-600 */
+  --accent: #3b82f6; /* blue-500 */
+  --accent-hover: #2563eb; /* blue-600 */
+  --accent-muted: #1e40af; /* blue-700 */
+  --success: #10b981; /* emerald-500 */
+  --warning: #f59e0b; /* amber-500 */
+  --error: #ef4444; /* red-500 */
+  --card-background: #1e293b; /* slate-800 */
+  --input-background: #334155; /* slate-700 */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
 }
 
-/* Fix input text visibility - ensure all input text is black and readable */
+/* Professional input styling for dark theme */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -27,51 +36,61 @@ input[type="number"],
 input[type="datetime-local"],
 textarea,
 select {
-  color: #000000 !important;
-  background-color: #ffffff !important;
+  background-color: var(--input-background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  transition: all 0.2s ease-in-out;
 }
 
-/* Additional fix for any inputs without explicit type */
-input:not([type]),
-input[type=""] {
-  color: #000000 !important;
-  background-color: #ffffff !important;
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: var(--surface-elevated) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
 }
 
-/* Fix select dropdown options */
-select option {
-  color: #000000 !important;
-  background-color: #ffffff !important;
-}
-
-/* Ensure placeholder text remains visible but distinct */
+/* Placeholder styling */
 input::placeholder,
 textarea::placeholder {
-  color: #9ca3af !important; /* gray-400 */
+  color: var(--foreground-subtle) !important;
 }
 
-/* For dark mode, adjust text color */
-@media (prefers-color-scheme: dark) {
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="url"],
-  input[type="number"],
-  input[type="datetime-local"],
-  textarea,
-  select {
-    color: #ffffff !important;
-    background-color: #1f2937 !important; /* gray-800 */
-  }
-  
-  input:not([type]),
-  input[type=""] {
-    color: #ffffff !important;
-    background-color: #1f2937 !important;
-  }
-  
-  select option {
-    color: #ffffff !important;
-    background-color: #1f2937 !important;
-  }
+/* Select dropdown options */
+select option {
+  background-color: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-subtle);
+}
+
+/* Professional button reset */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Card shadows for dark theme */
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.card-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
