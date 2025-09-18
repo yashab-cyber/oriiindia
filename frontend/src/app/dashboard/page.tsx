@@ -74,16 +74,17 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      // Load all dashboard data in parallel
-      const [statsData, papersData, eventsData] = await Promise.all([
-        dashboardAPI.getUserStats(),
-        dashboardAPI.getUserPapers(),
-        dashboardAPI.getUpcomingEvents()
-      ]);
+      // Load dashboard data
+      const dashboardData = await dashboardAPI.getDashboardStats();
 
-      setStats(statsData);
-      setRecentPapers((papersData.data || []).slice(0, 3)); // Show only recent 3
-      setUpcomingEvents((eventsData.data || []).slice(0, 3)); // Show only upcoming 3
+      setStats({
+        papersCount: dashboardData.stats.userPapersCount || 0,
+        upcomingEventsCount: dashboardData.stats.upcomingEventsCount || 0,
+        totalViews: dashboardData.stats.totalViews || 0,
+        collaboratorsCount: 0 // TODO: Add collaborators count
+      });
+      setRecentPapers((dashboardData.recentPapers || []).slice(0, 3));
+      setUpcomingEvents((dashboardData.upcomingEvents || []).slice(0, 3));
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       setError('Failed to load dashboard data. Please try again.');
