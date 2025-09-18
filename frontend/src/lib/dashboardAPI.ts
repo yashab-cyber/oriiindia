@@ -89,7 +89,7 @@ export const dashboardAPI = {
         })
         console.log('📅 Events response status:', eventsResponse.status)
         console.log('📅 Events response:', eventsResponse.data)
-        allEvents = eventsResponse.data?.data || []
+        allEvents = eventsResponse.data?.data?.events || []
         console.log(`📅 Found ${allEvents.length} events`)
       } catch (eventsError: any) {
         console.error('❌ Error fetching events:', eventsError)
@@ -116,21 +116,36 @@ export const dashboardAPI = {
 
       // Calculate statistics
       console.log('📊 Calculating statistics...')
+      
+      // Ensure arrays are valid before processing
+      const safeAllPapers = Array.isArray(allPapers) ? allPapers : []
+      const safeAllEvents = Array.isArray(allEvents) ? allEvents : []
+      
+      console.log(`📊 Processing ${safeAllPapers.length} papers and ${safeAllEvents.length} events`)
+      
       const now = new Date()
-      const upcomingEvents = allEvents.filter((event: Event) => new Date(event.startDate) > now)
-      const publishedPapers = allPapers.filter((paper: any) => paper.status === 'published')
-      const draftPapers = allPapers.filter((paper: any) => paper.status === 'draft')
+      const upcomingEvents = safeAllEvents.filter((event: Event) => {
+        try {
+          return event.startDate && new Date(event.startDate) > now
+        } catch (e) {
+          console.warn('⚠️ Invalid event date:', event)
+          return false
+        }
+      })
+      
+      const publishedPapers = safeAllPapers.filter((paper: any) => paper.status === 'published')
+      const draftPapers = safeAllPapers.filter((paper: any) => paper.status === 'draft')
       
       // Calculate user-specific papers (simplified - showing all for now since we don't have user filtering)
-      const userPapersCount = allPapers.length
+      const userPapersCount = safeAllPapers.length
 
-      const totalViews = allPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.views || 0), 0)
-      const totalDownloads = allPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.downloads || 0), 0)
+      const totalViews = safeAllPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.views || 0), 0)
+      const totalDownloads = safeAllPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.downloads || 0), 0)
 
       const stats = {
-        totalPapers: allPapers.length,
+        totalPapers: safeAllPapers.length,
         userPapersCount,
-        totalEvents: allEvents.length,
+        totalEvents: safeAllEvents.length,
         upcomingEventsCount: upcomingEvents.length,
         publishedPapers: publishedPapers.length,
         draftPapers: draftPapers.length,
@@ -143,7 +158,7 @@ export const dashboardAPI = {
       // Ensure we return valid data even if some API calls failed
       const result = {
         stats,
-        recentPapers: allPapers.slice(0, 5),
+        recentPapers: safeAllPapers.slice(0, 5),
         upcomingEvents: upcomingEvents.slice(0, 5),
         currentUser
       }
