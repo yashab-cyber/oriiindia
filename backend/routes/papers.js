@@ -5,7 +5,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import ResearchPaper from '../models/ResearchPaper.js';
 import User from '../models/User.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import NotificationService from '../services/NotificationService.js';
 
 const router = express.Router();
@@ -50,7 +50,7 @@ const upload = multer({
 });
 
 // Create new paper (Step 1: Basic Information)
-router.post('/create', authMiddleware, async (req, res) => {
+router.post('/create', authenticate, async (req, res) => {
   try {
     const {
       title,
@@ -121,7 +121,7 @@ router.post('/create', authMiddleware, async (req, res) => {
 });
 
 // Update paper basic information
-router.put('/:id/basic-info', authMiddleware, async (req, res) => {
+router.put('/:id/basic-info', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -175,7 +175,7 @@ router.put('/:id/basic-info', authMiddleware, async (req, res) => {
 });
 
 // Add author to paper (Step 2: Authors)
-router.post('/:id/authors', authMiddleware, async (req, res) => {
+router.post('/:id/authors', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, email, order, role, affiliation, contribution } = req.body;
@@ -268,7 +268,7 @@ router.post('/:id/authors', authMiddleware, async (req, res) => {
 });
 
 // Remove author from paper
-router.delete('/:id/authors/:authorId', authMiddleware, async (req, res) => {
+router.delete('/:id/authors/:authorId', authenticate, async (req, res) => {
   try {
     const { id, authorId } = req.params;
 
@@ -317,7 +317,7 @@ router.delete('/:id/authors/:authorId', authMiddleware, async (req, res) => {
 });
 
 // Upload manuscript file (Step 3: Manuscript)
-router.post('/:id/upload-manuscript', authMiddleware, upload.single('manuscript'), async (req, res) => {
+router.post('/:id/upload-manuscript', authenticate, upload.single('manuscript'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -398,7 +398,7 @@ router.post('/:id/upload-manuscript', authMiddleware, upload.single('manuscript'
 });
 
 // Upload supplementary materials
-router.post('/:id/upload-supplementary', authMiddleware, upload.array('supplementary', 10), async (req, res) => {
+router.post('/:id/upload-supplementary', authenticate, upload.array('supplementary', 10), async (req, res) => {
   try {
     const { id } = req.params;
     const { descriptions } = req.body; // Array of descriptions for each file
@@ -466,7 +466,7 @@ router.post('/:id/upload-supplementary', authMiddleware, upload.array('supplemen
 });
 
 // Upload figures
-router.post('/:id/upload-figures', authMiddleware, upload.array('figures', 20), async (req, res) => {
+router.post('/:id/upload-figures', authenticate, upload.array('figures', 20), async (req, res) => {
   try {
     const { id } = req.params;
     const { captions, orders } = req.body;
@@ -538,7 +538,7 @@ router.post('/:id/upload-figures', authMiddleware, upload.array('figures', 20), 
 });
 
 // Submit paper for review (Step 5: Submit)
-router.post('/:id/submit', authMiddleware, async (req, res) => {
+router.post('/:id/submit', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const { suggestedReviewers, excludedReviewers, coverLetter } = req.body;
@@ -651,7 +651,7 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
 });
 
 // Get paper details
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -697,7 +697,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 });
 
 // Get user's papers
-router.get('/user/my-papers', authMiddleware, async (req, res) => {
+router.get('/user/my-papers', authenticate, async (req, res) => {
   try {
     const { status, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
 
@@ -744,7 +744,7 @@ router.get('/user/my-papers', authMiddleware, async (req, res) => {
 });
 
 // Get papers for review
-router.get('/reviewer/assigned', authMiddleware, async (req, res) => {
+router.get('/reviewer/assigned', authenticate, async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
 
@@ -788,7 +788,7 @@ router.get('/reviewer/assigned', authMiddleware, async (req, res) => {
 });
 
 // Delete paper (only drafts)
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 

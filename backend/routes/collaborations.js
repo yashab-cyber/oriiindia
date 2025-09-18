@@ -1,12 +1,12 @@
 import express from 'express';
 import Collaboration from '../models/Collaboration.js';
 import NotificationService from '../services/NotificationService.js';
-import auth from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Get all collaborations with filtering and pagination
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     const {
       page = 1,
@@ -104,8 +104,8 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Get collaboration by ID
-router.get('/:id', auth, async (req, res) => {
+// Get single collaboration by ID
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const collaboration = await Collaboration.findById(req.params.id)
       .populate('initiator', 'firstName lastName email profilePicture institution department')
@@ -153,7 +153,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Create new collaboration
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     const {
       title,
@@ -202,7 +202,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Update collaboration
-router.patch('/:id', auth, async (req, res) => {
+router.patch('/:id', authenticate, async (req, res) => {
   try {
     const collaboration = await Collaboration.findById(req.params.id);
 
@@ -262,7 +262,7 @@ router.patch('/:id', auth, async (req, res) => {
 });
 
 // Invite collaborator
-router.post('/:id/invite', auth, async (req, res) => {
+router.post('/:id/invite', authenticate, async (req, res) => {
   try {
     const { userEmail, role = 'contributor', permissions = {} } = req.body;
 
@@ -363,7 +363,7 @@ router.post('/:id/invite', auth, async (req, res) => {
 });
 
 // Respond to collaboration invitation
-router.post('/:id/respond', auth, async (req, res) => {
+router.post('/:id/respond', authenticate, async (req, res) => {
   try {
     const { response } = req.body; // 'accept' or 'decline'
 
@@ -433,7 +433,7 @@ router.post('/:id/respond', auth, async (req, res) => {
 });
 
 // Add collaboration update
-router.post('/:id/updates', auth, async (req, res) => {
+router.post('/:id/updates', authenticate, async (req, res) => {
   try {
     const { title, content, type = 'general', attachments = [] } = req.body;
 
@@ -507,7 +507,7 @@ router.post('/:id/updates', auth, async (req, res) => {
 });
 
 // Update milestone status
-router.patch('/:id/milestones/:milestoneId', auth, async (req, res) => {
+router.patch('/:id/milestones/:milestoneId', authenticate, async (req, res) => {
   try {
     const { status } = req.body;
 
@@ -574,7 +574,7 @@ router.patch('/:id/milestones/:milestoneId', auth, async (req, res) => {
 });
 
 // Delete collaboration
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const collaboration = await Collaboration.findById(req.params.id);
 
@@ -611,7 +611,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Get collaboration statistics
-router.get('/stats/overview', auth, async (req, res) => {
+router.get('/stats/overview', authenticate, async (req, res) => {
   try {
     const stats = await Promise.all([
       // Total collaborations

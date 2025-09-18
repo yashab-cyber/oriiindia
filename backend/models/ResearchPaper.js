@@ -536,7 +536,6 @@ const researchPaperSchema = new mongoose.Schema({
 researchPaperSchema.index({ submittedBy: 1, status: 1 });
 researchPaperSchema.index({ 'authors.user': 1 });
 researchPaperSchema.index({ field: 1, subfield: 1 });
-researchPaperSchema.index({ submissionId: 1 }, { unique: true });
 researchPaperSchema.index({ createdAt: -1 });
 researchPaperSchema.index({ 'reviewProcess.assignedReviewers.reviewer': 1 });
 
