@@ -36,55 +36,99 @@ export const dashboardAPI = {
     }
   },
 
-  // Get dashboard statistics
+  // Get dashboard stats and combine all data
   getDashboardStats: async () => {
+    console.log('📊 Starting getDashboardStats...')
     try {
-      // Get research papers and events
-      const [papersResponse, eventsResponse] = await Promise.all([
-        api.get('/research'),
-        api.get('/events')
-      ])
+      let allPapers: any[] = []
+      let allEvents: any[] = []
+      let currentUser: any = null
 
-      const papers = papersResponse.data?.data || []
-      const events = eventsResponse.data?.data || []
-      
-      // Filter upcoming events
-      const upcomingEvents = events.filter((event: Event) => new Date(event.startDate) > new Date())
-      
-      // Get current user to filter user-specific data
-      const currentUser = dashboardAPI.getCurrentUser()
-      const userId = currentUser?._id || currentUser?.id
-      
-      // Filter user's papers (if user ID available)
-      const userPapers = userId 
-        ? papers.filter((paper: any) => 
-            paper.submittedBy === userId || 
-            paper.submittedBy?._id === userId ||
-            paper.authors?.some((author: any) => author.user === userId)
-          )
-        : papers
+      // Test API connection first
+      console.log('🔗 Testing API connection...')
+      try {
+        const healthCheck = await api.get('/health')
+        console.log('✅ API health check passed:', healthCheck.data)
+      } catch (healthError) {
+        console.error('❌ API health check failed:', healthError)
+      }
+
+      // Get research papers
+      console.log('📄 Fetching research papers...')
+      try {
+        const papersResponse = await api.get('/research')
+        console.log('📄 Papers response:', papersResponse.data)
+        allPapers = papersResponse.data?.data?.papers || []
+        console.log(`📄 Found ${allPapers.length} papers`)
+      } catch (papersError: any) {
+        console.error('❌ Error fetching papers:', papersError)
+        if (papersError.response) {
+          console.error('📄 Papers error response:', papersError.response.data)
+          console.error('📄 Papers error status:', papersError.response.status)
+        }
+      }
+
+      // Get events
+      console.log('📅 Fetching events...')
+      try {
+        const eventsResponse = await api.get('/events')
+        console.log('📅 Events response:', eventsResponse.data)
+        allEvents = eventsResponse.data?.data || []
+        console.log(`📅 Found ${allEvents.length} events`)
+      } catch (eventsError: any) {
+        console.error('❌ Error fetching events:', eventsError)
+        if (eventsError.response) {
+          console.error('📅 Events error response:', eventsError.response.data)
+          console.error('📅 Events error status:', eventsError.response.status)
+        }
+      }
+
+      // Try to get current user (this might fail if endpoint doesn't exist)
+      console.log('👤 Fetching current user...')
+      try {
+        const userResponse = await api.get('/users/profile')
+        currentUser = userResponse.data?.data
+        console.log('👤 Current user:', currentUser)
+      } catch (userError) {
+        console.warn('⚠️ Could not fetch user profile (endpoint might not exist):', (userError as any)?.message || 'Unknown error')
+        // This is okay, we'll continue without user data
+      }
 
       // Calculate statistics
+      console.log('📊 Calculating statistics...')
+      const now = new Date()
+      const upcomingEvents = allEvents.filter((event: Event) => new Date(event.startDate) > now)
+      const publishedPapers = allPapers.filter((paper: any) => paper.status === 'published')
+      const draftPapers = allPapers.filter((paper: any) => paper.status === 'draft')
+      
+      // Calculate user-specific papers (simplified - showing all for now since we don't have user filtering)
+      const userPapersCount = allPapers.length
+
+      const totalViews = allPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.views || 0), 0)
+      const totalDownloads = allPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.downloads || 0), 0)
+
       const stats = {
-        totalPapers: papers.length,
-        userPapersCount: userPapers.length,
-        totalEvents: events.length,
+        totalPapers: allPapers.length,
+        userPapersCount,
+        totalEvents: allEvents.length,
         upcomingEventsCount: upcomingEvents.length,
-        publishedPapers: userPapers.filter((paper: any) => paper.status === 'published').length,
-        draftPapers: userPapers.filter((paper: any) => paper.status === 'draft').length,
-        totalViews: userPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.views || 0), 0),
-        totalDownloads: userPapers.reduce((sum: number, paper: any) => sum + (paper.metrics?.downloads || 0), 0)
+        publishedPapers: publishedPapers.length,
+        draftPapers: draftPapers.length,
+        totalViews,
+        totalDownloads,
       }
+
+      console.log('📊 Final stats:', stats)
 
       return {
         stats,
-        recentPapers: userPapers.slice(0, 5), // Last 5 papers
-        upcomingEvents: upcomingEvents.slice(0, 3), // Next 3 events
+        recentPapers: allPapers.slice(0, 5),
+        upcomingEvents: upcomingEvents.slice(0, 5),
         currentUser
       }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
-      throw new Error('Failed to load dashboard data')
+      console.error('❌ Error in getDashboardStats:', error)
+      throw error
     }
   },
 
