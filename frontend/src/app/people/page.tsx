@@ -75,7 +75,7 @@ export default function People() {
 
     // Role filter
     if (roleFilter !== 'all') {
-      filtered = filtered.filter(person => person.role === roleFilter);
+      filtered = filtered.filter(person => (person.role || 'visitor') === roleFilter);
     }
 
     // Department filter
@@ -86,7 +86,7 @@ export default function People() {
     setFilteredPeople(filtered);
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string | undefined) => {
     switch (role) {
       case 'faculty':
         return 'bg-blue-900/20 text-blue-400 border border-blue-800';
@@ -238,8 +238,8 @@ export default function People() {
                           {person.profile.title}
                         </p>
                       )}
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(person.role)}`}>
-                        {person.role.charAt(0).toUpperCase() + person.role.slice(1)}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(person.role || 'visitor')}`}>
+                        {person.role ? person.role.charAt(0).toUpperCase() + person.role.slice(1) : 'Visitor'}
                       </span>
                     </div>
                   </div>
@@ -331,11 +331,11 @@ export default function People() {
                   </div>
                   
                   {/* Contact Links */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-700">
                     <div className="flex items-center space-x-3">
                       <a 
                         href={`mailto:${person.email}`}
-                        className="text-gray-400 hover:text-blue-600 transition-colors"
+                        className="text-slate-400 hover:text-blue-400 transition-colors"
                         title="Email"
                       >
                         <EnvelopeIcon className="h-5 w-5" />
@@ -345,7 +345,7 @@ export default function People() {
                           href={person.profile.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          className="text-slate-400 hover:text-blue-400 transition-colors"
                           title="Website"
                         >
                           <GlobeAltIcon className="h-5 w-5" />
@@ -356,7 +356,7 @@ export default function People() {
                           href={person.profile.linkedIn}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          className="text-slate-400 hover:text-blue-400 transition-colors"
                           title="LinkedIn"
                         >
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">

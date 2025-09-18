@@ -49,7 +49,7 @@ export default function PersonProfile() {
     }
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string | undefined) => {
     switch (role) {
       case 'faculty':
         return 'bg-blue-900/20 text-blue-400 border border-blue-800';
@@ -151,8 +151,8 @@ export default function PersonProfile() {
               )}
               
               <div className="flex items-center space-x-4 mb-4">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(person.role)}`}>
-                  {person.role.charAt(0).toUpperCase() + person.role.slice(1)}
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(person.role || 'visitor')}`}>
+                  {person.role ? person.role.charAt(0).toUpperCase() + person.role.slice(1) : 'Visitor'}
                 </span>
                 {person.profile?.department && (
                   <div className="flex items-center text-slate-400">
@@ -243,33 +243,33 @@ export default function PersonProfile() {
             )}
             
             {/* Recent Publications (Placeholder) */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Publications</h2>
+            <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
+              <h2 className="text-xl font-semibold text-slate-100 mb-4">Recent Publications</h2>
               <div className="space-y-4">
-                <div className="border-l-4 border-blue-600 pl-4">
-                  <h3 className="font-medium text-gray-900">Machine Learning Applications in Climate Research</h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h3 className="font-medium text-slate-200">Machine Learning Applications in Climate Research</h3>
+                  <p className="text-sm text-slate-400 mt-1">
                     Published in Nature Climate Change • 2025
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-slate-500 mt-2">
                     A comprehensive study on the application of machine learning techniques in climate modeling...
                   </p>
                 </div>
-                <div className="border-l-4 border-green-600 pl-4">
-                  <h3 className="font-medium text-gray-900">Sustainable Technology Solutions for Environmental Challenges</h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                <div className="border-l-4 border-green-500 pl-4">
+                  <h3 className="font-medium text-slate-200">Sustainable Technology Solutions for Environmental Challenges</h3>
+                  <p className="text-sm text-slate-400 mt-1">
                     Published in Environmental Science & Technology • 2024
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-slate-500 mt-2">
                     Exploring innovative approaches to address environmental challenges through technology...
                   </p>
                 </div>
-                <div className="border-l-4 border-purple-600 pl-4">
-                  <h3 className="font-medium text-gray-900">AI Ethics in Research: A Framework for Responsible Innovation</h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                <div className="border-l-4 border-purple-500 pl-4">
+                  <h3 className="font-medium text-slate-200">AI Ethics in Research: A Framework for Responsible Innovation</h3>
+                  <p className="text-sm text-slate-400 mt-1">
                     Published in AI & Society • 2024
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-slate-500 mt-2">
                     Developing ethical frameworks for artificial intelligence applications in research...
                   </p>
                 </div>
@@ -277,7 +277,7 @@ export default function PersonProfile() {
               <div className="mt-6">
                 <Link 
                   href="/research"
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
                 >
                   View all publications →
                 </Link>
@@ -288,62 +288,52 @@ export default function PersonProfile() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Information */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+            {/* Contact Information */}
+            <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4">Contact Information</h3>
               <div className="space-y-3">
                 <div className="flex items-center">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <a 
-                    href={`mailto:${person.email}`}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
-                  >
-                    {person.email}
-                  </a>
-                </div>
-                
-                {person.profile.website && (
-                  <div className="flex items-center">
-                    <GlobeAltIcon className="h-5 w-5 text-gray-400 mr-3" />
+                  <EnvelopeIcon className="h-5 w-5 text-slate-400 mr-3" />
+                  <div>
+                    <p className="font-medium text-slate-200">Email</p>
                     <a 
-                      href={person.profile.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      href={`mailto:${person.email}`}
+                      className="text-blue-400 hover:text-blue-300 transition-colors"
                     >
-                      Personal Website
+                      {person.email}
                     </a>
                   </div>
-                )}
-                
-                {person.profile.orcid && (
+                </div>
+                {person.profile?.website && (
                   <div className="flex items-center">
-                    <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <a 
-                      href={`https://orcid.org/${person.profile.orcid}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      ORCID: {person.profile.orcid}
-                    </a>
+                    <GlobeAltIcon className="h-5 w-5 text-slate-400 mr-3" />
+                    <div>
+                      <p className="font-medium text-slate-200">Website</p>
+                      <a 
+                        href={person.profile.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        {person.profile.website}
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-            
-            {/* Professional Information */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Details</h3>
+            </div>            {/* Professional Information */}
+            <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4">Professional Details</h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="font-medium text-gray-700">Role:</span>
-                  <p className="text-gray-900 capitalize">{person.role}</p>
+                  <span className="font-medium text-slate-300">Role:</span>
+                  <p className="text-slate-100 capitalize">{person.role || 'Visitor'}</p>
                 </div>
                 
-                {person.profile.department && (
+                {person.profile?.department && (
                   <div>
-                    <span className="font-medium text-gray-700">Department:</span>
-                    <p className="text-gray-900">{person.profile.department}</p>
+                    <span className="font-medium text-slate-300">Department:</span>
+                    <p className="text-slate-100">{person.profile.department}</p>
                   </div>
                 )}
                 
