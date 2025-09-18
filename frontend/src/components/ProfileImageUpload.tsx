@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { getApiUrl } from '@/lib/config';
 import { 
   UserCircleIcon, 
   CameraIcon,
@@ -34,7 +35,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   };
 
   const getAvatarUrl = (avatarId: string) => {
-    return `http://localhost:5000/api/files/avatar/${avatarId}`;
+    return getApiUrl(`/files/avatar/${avatarId}`);
   };
 
   return (

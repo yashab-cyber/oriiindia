@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/config';
 
 interface Report {
   _id: string;
@@ -97,7 +98,7 @@ const ContentModeration = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/admin/reports', {
+      const response = await fetch(getApiUrl('/admin/reports'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ const ContentModeration = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/admin/content', {
+      const response = await fetch(getApiUrl('/admin/content'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -140,7 +141,7 @@ const ContentModeration = () => {
   const updateReportStatus = async (reportId: string, status: string, notes: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/reports/${reportId}`, {
+      const response = await fetch(getApiUrl(`/admin/reports/${reportId}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -169,7 +170,7 @@ const ContentModeration = () => {
   const moderateContent = async (contentId: string, action: 'approve' | 'hide' | 'delete', type: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/content/${contentId}/moderate`, {
+      const response = await fetch(getApiUrl(`/admin/content/${contentId}/moderate`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

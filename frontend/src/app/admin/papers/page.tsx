@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/config';
 
 interface ResearchPaper {
   _id: string;
@@ -81,7 +82,7 @@ const PaperManagement = () => {
         ...(statusFilter && { status: statusFilter })
       });
 
-      const response = await fetch(`http://localhost:5000/api/admin/papers?${params}`, {
+      const response = await fetch(getApiUrl(`/admin/papers?${params}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ const PaperManagement = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/papers/${selectedPaper._id}/status`, {
+      const response = await fetch(getApiUrl(`/admin/papers/${selectedPaper._id}/status`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/config';
 
 interface User {
   _id: string;
@@ -72,7 +73,7 @@ const UserManagement = () => {
         ...(statusFilter && { status: statusFilter })
       });
 
-      const response = await fetch(`http://localhost:5000/api/admin/users?${params}`, {
+      const response = await fetch(getApiUrl(`/admin/users?${params}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ const UserManagement = () => {
   const updateUserStatus = async (userId: string, isActive: boolean) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/status`, {
+      const response = await fetch(getApiUrl(`/admin/users/${userId}/status`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -131,7 +132,7 @@ const UserManagement = () => {
   const updateUserRole = async (userId: string, role: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+      const response = await fetch(getApiUrl(`/admin/users/${userId}/role`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

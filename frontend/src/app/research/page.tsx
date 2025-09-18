@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getApiUrl } from '@/lib/config';
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -56,7 +57,7 @@ export default function Research() {
     const fetchPapers = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:5000/api/research');
+        const response = await fetch(getApiUrl('/research'));
         
         if (response.ok) {
           const data = await response.json();

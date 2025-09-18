@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getApiUrl } from '@/lib/config';
 
 interface ReportButtonProps {
   contentType: 'user' | 'post' | 'comment' | 'research_paper' | 'event';
@@ -45,7 +46,7 @@ const ReportButton: React.FC<ReportButtonProps> = ({
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/reports', {
+      const response = await fetch(getApiUrl('/reports'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

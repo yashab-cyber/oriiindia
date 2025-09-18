@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
-import ProfileImageUpload from '../../components/ProfileImageUpload';
+import ProfileImageUpload from '@/components/ProfileImageUpload';
+import { getApiUrl } from '@/lib/config';
 import ResearchInterestsManager from '../../components/ResearchInterestsManager';
 
 interface UserProfile {
@@ -179,7 +180,7 @@ const ProfilePage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/users/${user?._id}`, {
+      const response = await fetch(getApiUrl(`/users/${user?._id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ const ProfilePage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(getApiUrl('/auth/change-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

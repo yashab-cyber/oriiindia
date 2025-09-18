@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getApiUrl } from '@/lib/config';
 import { 
   ArrowLeftIcon,
   UserIcon,
@@ -33,7 +34,7 @@ export default function PersonProfile() {
   const fetchPerson = async (id: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/users/${id}`);
+      const response = await fetch(getApiUrl(`/users/${id}`));
       
       if (response.ok) {
         const data = await response.json();

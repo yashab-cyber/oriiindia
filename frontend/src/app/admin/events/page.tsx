@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/config';
 
 interface Event {
   _id: string;
@@ -65,7 +66,7 @@ const EventManagement = () => {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/events', {
+      const response = await fetch(getApiUrl('/events'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -97,8 +98,8 @@ const EventManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const url = editingEvent 
-        ? `http://localhost:5000/api/events/${editingEvent._id}`
-        : 'http://localhost:5000/api/events';
+        ? getApiUrl(`/events/${editingEvent._id}`)
+        : getApiUrl('/events');
       
       const method = editingEvent ? 'PUT' : 'POST';
       
@@ -164,7 +165,7 @@ const EventManagement = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/events/${eventId}`, {
+      const response = await fetch(getApiUrl(`/events/${eventId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

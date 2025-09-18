@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getApiUrl } from '@/lib/config';
 import { 
   ArrowLeftIcon,
   DocumentTextIcon,
@@ -33,7 +34,7 @@ export default function ResearchDetail() {
   const fetchPaper = async (id: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/research/${id}`);
+      const response = await fetch(getApiUrl(`/research/${id}`));
       
       if (response.ok) {
         const data = await response.json();

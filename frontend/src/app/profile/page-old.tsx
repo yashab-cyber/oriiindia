@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfileImageUpload from '@/components/ProfileImageUpload';
+import { getApiUrl } from '@/lib/config';
 import { UserIcon, EnvelopeIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 
 interface UserProfile {
@@ -113,7 +114,7 @@ export default function ProfileSettings() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/users/${user?._id}`, {
+      const response = await fetch(getApiUrl(`/users/${user?._id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

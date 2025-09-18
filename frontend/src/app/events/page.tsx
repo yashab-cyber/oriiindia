@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getApiUrl } from '@/lib/config';
 import { 
   CalendarIcon,
   MapPinIcon,
@@ -34,7 +35,7 @@ export default function Events() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/events');
+      const response = await fetch(getApiUrl('/events'));
       
       if (response.ok) {
         const data = await response.json();

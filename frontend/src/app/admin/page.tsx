@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/config';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState<any>(null);
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('token');
       
       // Fetch dashboard statistics
-      const response = await fetch('http://localhost:5000/api/admin/stats', {
+      const response = await fetch(getApiUrl('/admin/stats'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '@/lib/config';
 import NotificationCenter from './NotificationCenter';
 
 const NotificationBell: React.FC = () => {
@@ -21,7 +22,7 @@ const NotificationBell: React.FC = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:5000/api/notifications/unread-count', {
+      const response = await fetch(getApiUrl('/notifications/unread-count'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

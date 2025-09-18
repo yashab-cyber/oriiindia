@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import { getApiUrl } from '@/lib/config';
 import { 
   CloudArrowUpIcon, 
   DocumentIcon, 
@@ -164,7 +165,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       throw new Error('Authentication required');
     }
 
-    let url = `http://localhost:5000/api/files/upload/${uploadType}`;
+    let url = getApiUrl(`/files/upload/${uploadType}`);
     if (uploadType === 'research-papers' && paperId) {
       url += `/${paperId}`;
     }

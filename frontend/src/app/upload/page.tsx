@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FileUpload from '@/components/FileUpload';
+import { getApiUrl } from '@/lib/config';
 import { 
   DocumentIcon,
   CloudArrowUpIcon,
@@ -56,7 +57,7 @@ export default function UploadPage() {
   const fetchUserPapers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/research', {
+      const response = await fetch(getApiUrl('/research'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -93,7 +94,7 @@ export default function UploadPage() {
   const downloadFile = async (fileId: string, filename: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/files/download/research-papers/${fileId}`, {
+      const response = await fetch(getApiUrl(`/files/download/research-papers/${fileId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -120,7 +121,7 @@ export default function UploadPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/files/delete/research-papers/${fileId}`, {
+      const response = await fetch(getApiUrl(`/files/delete/research-papers/${fileId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getApiUrl } from '@/lib/config';
 import { 
   MapPinIcon,
   PhoneIcon,
@@ -77,7 +78,7 @@ export default function Contact() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(getApiUrl('/contact'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

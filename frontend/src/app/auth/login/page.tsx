@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { getApiUrl } from '@/lib/config';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,14 +75,14 @@ export default function Login() {
 
       if (response.ok) {
         // Store token in localStorage
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard or home
         router.push('/dashboard');
       } else {
         setErrors({
-          submit: data.message || 'Login failed. Please try again.'
+          submit: data.error?.message || data.message || 'Login failed. Please try again.'
         });
       }
     } catch (error) {

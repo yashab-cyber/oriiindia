@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { getApiUrl } from '@/lib/config';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -115,14 +116,14 @@ export default function Register() {
 
       if (response.ok) {
         // Store token in localStorage
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard
         router.push('/dashboard');
       } else {
         setErrors({
-          submit: data.message || 'Registration failed. Please try again.'
+          submit: data.error?.message || data.message || 'Registration failed. Please try again.'
         });
       }
     } catch (error) {
