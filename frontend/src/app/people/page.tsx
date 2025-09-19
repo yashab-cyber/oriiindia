@@ -12,7 +12,8 @@ import {
   AcademicCapIcon,
   EnvelopeIcon,
   GlobeAltIcon,
-  MapPinIcon
+  MapPinIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { User } from '@/types';
 
@@ -37,10 +38,52 @@ export default function People() {
     filterPeople();
   }, [people, searchTerm, roleFilter, departmentFilter]);
 
-  const fetchPeople = async () => {
+  // Refresh data when the page becomes visible (user returns from profile page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible, refresh the data with cache-busting
+        fetchPeople(true);
+      }
+    };
+
+    const handleFocus = () => {
+      // Window regained focus, refresh the data with cache-busting
+      fetchPeople(true);
+    };
+
+    // Listen for localStorage changes (when profile is updated on another tab/page)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' && e.newValue !== e.oldValue) {
+        // User data changed, refresh people list
+        fetchPeople(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  const fetchPeople = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const response = await fetch(getApiUrl('/users'));
+      
+      // Add cache-busting parameter when force refreshing
+      const url = forceRefresh 
+        ? getApiUrl(`/users?t=${Date.now()}`) 
+        : getApiUrl('/users');
+      
+      const response = await fetch(url, {
+        // Disable cache when force refreshing
+        cache: forceRefresh ? 'no-cache' : 'default'
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -142,9 +185,19 @@ export default function People() {
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Our People
-            </h1>
+            <div className="flex items-center justify-center mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold">
+                Our People
+              </h1>
+              <button
+                onClick={() => fetchPeople(true)}
+                disabled={loading}
+                className="ml-4 p-2 bg-blue-700 hover:bg-blue-800 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh people data"
+              >
+                <ArrowPathIcon className={`h-6 w-6 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             <p className="text-xl text-blue-100 max-w-3xl mx-auto">
               Meet the brilliant minds driving innovation and advancing knowledge at the 
               Open Research Institute of India.

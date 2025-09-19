@@ -33,10 +33,40 @@ export default function PersonProfile() {
     }
   }, [params.id]);
 
-  const fetchPerson = async (id: string) => {
+  // Refresh data when page becomes visible (in case profile was updated)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && params.id) {
+        fetchPerson(params.id as string, true);
+      }
+    };
+
+    const handleFocus = () => {
+      if (params.id) {
+        fetchPerson(params.id as string, true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [params.id]);
+
+  const fetchPerson = async (id: string, forceRefresh = false) => {
     try {
       setLoading(true);
-      const response = await fetch(getApiUrl(`/users/${id}`));
+      
+      const url = forceRefresh 
+        ? getApiUrl(`/users/${id}?t=${Date.now()}`) 
+        : getApiUrl(`/users/${id}`);
+      
+      const response = await fetch(url, {
+        cache: forceRefresh ? 'no-cache' : 'default'
+      });
       
       if (response.ok) {
         const data = await response.json();
