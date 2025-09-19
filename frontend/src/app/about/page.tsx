@@ -81,42 +81,42 @@ export default function About() {
 
   const milestones = [
     {
-      year: "2018",
+      year: "2025",
       title: "Foundation",
       description: "Open Research Institute of India was established with the vision of democratizing research."
     },
     {
-      year: "2019",
+      year: "2026",
       title: "First Research Programs",
       description: "Launched flagship research programs in AI, climate science, and biotechnology."
     },
     {
-      year: "2020",
+      year: "2027",
       title: "Global Partnerships",
       description: "Established partnerships with leading international research institutions."
     },
     {
-      year: "2021",
+      year: "2028",
       title: "Open Access Platform",
       description: "Launched comprehensive open access publication and collaboration platform."
     },
     {
-      year: "2022",
+      year: "2029",
       title: "1000+ Researchers",
       description: "Reached milestone of 1000+ active researchers across multiple disciplines."
     },
     {
-      year: "2023",
+      year: "2030",
       title: "Major Grants",
       description: "Secured significant funding for climate change and healthcare research initiatives."
     },
     {
-      year: "2024",
+      year: "2031",
       title: "Innovation Hub",
       description: "Opened state-of-the-art innovation hub for technology transfer and startup incubation."
     },
     {
-      year: "2025",
+      year: "2032",
       title: "Global Recognition",
       description: "Recognized as leading research institute for sustainable development solutions."
     }

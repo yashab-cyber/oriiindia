@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   MapPinIcon, 
   PhoneIcon, 
@@ -41,13 +42,18 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Organization Info */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xl">
-                O
+            <div className="flex flex-col items-start space-y-2">
+              <div className="flex h-10 w-10 items-center justify-center">
+                <Image
+                  src="/images/logos/orii_logo.svg"
+                  alt="ORII Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
               <div>
-                <div className="text-xl font-bold text-slate-100">Orii</div>
-                <div className="text-sm text-slate-400">Open Research Institute of India</div>
+                <div className="text-lg font-bold text-slate-100">Open Research Institute of India</div>
               </div>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
@@ -57,15 +63,19 @@ const Footer = () => {
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
                 <MapPinIcon className="h-4 w-4 text-slate-400" />
-                <span className="text-slate-400">New Delhi, India</span>
+                <span className="text-slate-400">Kanpur, India</span>
               </div>
               <div className="flex items-center space-x-2">
                 <PhoneIcon className="h-4 w-4 text-slate-400" />
                 <span className="text-slate-400">+91 8960457971</span>
               </div>
               <div className="flex items-center space-x-2">
+                <PhoneIcon className="h-4 w-4 text-slate-400" />
+                <span className="text-slate-400">+91 6296600565</span>
+              </div>
+              <div className="flex items-center space-x-2">
                 <EnvelopeIcon className="h-4 w-4 text-slate-400" />
-                <span className="text-slate-400">info@orii.org</span>
+                <span className="text-slate-400">openresearchinstituteofindia@gmail.com</span>
               </div>
             </div>
           </div>
@@ -126,7 +136,7 @@ const Footer = () => {
         <div className="border-t border-slate-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-slate-400">
-              © 2024 Open Research Institute of India. All rights reserved.
+              © 2025 Open Research Institute of India. All rights reserved.
             </div>
             <div className="flex space-x-6">
               <Link href="/privacy" className="text-slate-400 hover:text-blue-400 text-sm transition-colors">

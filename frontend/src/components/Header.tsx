@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   Bars3Icon, 
   XMarkIcon,
@@ -107,12 +108,19 @@ const Header = () => {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold text-xl shadow-lg">
-                O
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-xl font-bold text-slate-50">Orii</div>
-                <div className="text-xs text-slate-300">Open Research Institute of India</div>
+              <div className="flex flex-col items-center space-y-1">
+                <div className="flex h-10 w-10 items-center justify-center">
+                  <Image
+                    src="/images/logos/orii_logo.svg"
+                    alt="ORII Logo"
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                </div>
+                <div className="hidden sm:block text-center">
+                  <div className="text-sm font-bold text-slate-50 leading-tight">Open Research Institute of India</div>
+                </div>
               </div>
             </Link>
           </div>

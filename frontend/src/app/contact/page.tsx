@@ -116,26 +116,22 @@ export default function Contact() {
       title: 'Address',
       details: [
         'Open Research Institute of India',
-        'Technology Park, Sector 30',
-        'Gurgaon, Haryana 122001',
-        'India'
+        'Kanpur, India'
       ]
     },
     {
       icon: PhoneIcon,
       title: 'Phone',
       details: [
-        '+91-124-456-7890',
-        '+91-124-456-7891 (Fax)'
+        '+91 8960457971',
+        '+91 6296600565'
       ]
     },
     {
       icon: EnvelopeIcon,
       title: 'Email',
       details: [
-        'info@orii.org',
-        'research@orii.org',
-        'admin@orii.org'
+        'openresearchinstituteofindia@gmail.com'
       ]
     },
     {
@@ -152,26 +148,26 @@ export default function Contact() {
   const departments = [
     {
       name: 'Research Department',
-      email: 'research@orii.org',
-      phone: '+91-124-456-7892',
+      email: 'research.orii@gmail.com',
+      phone: '+91 8960457971',
       head: 'Dr. Sarah Johnson'
     },
     {
       name: 'Academic Affairs',
-      email: 'academics@orii.org',
-      phone: '+91-124-456-7893',
+      email: 'academics.orii@gmail.com',
+      phone: '+91 6296600565',
       head: 'Prof. Michael Chen'
     },
     {
       name: 'Events & Conferences',
-      email: 'events@orii.org',
-      phone: '+91-124-456-7894',
+      email: 'events.orii@gmail.com',
+      phone: '+91 8960457971',
       head: 'Ms. Priya Sharma'
     },
     {
       name: 'Publications',
-      email: 'publications@orii.org',
-      phone: '+91-124-456-7895',
+      email: 'publications.orii@gmail.com',
+      phone: '+91 6296600565',
       head: 'Dr. Rajesh Kumar'
     }
   ];
