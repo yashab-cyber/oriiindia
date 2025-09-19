@@ -26,23 +26,29 @@ export const register = async (req, res) => {
       });
     }
 
-    // Create new user with pending approval status
+    // Create new user with conditional approval (admins are auto-approved)
+    const isAdmin = role === 'admin';
     const user = new User({
       firstName,
       lastName,
       email,
       password,
       role,
-      isApproved: false,
-      approvalStatus: 'pending'
+      isApproved: isAdmin,
+      approvalStatus: isAdmin ? 'approved' : 'pending',
+      ...(isAdmin && { approvalDate: new Date() })
     });
 
     await user.save();
 
-    // Don't generate token or update login time for unapproved users
+    // Different response based on user role
+    const message = isAdmin 
+      ? 'Registration successful! Admin account created and approved automatically. You can now login.'
+      : 'Registration successful! Your account is pending admin approval. You will be notified once approved.';
+
     res.status(201).json({
       success: true,
-      message: 'Registration successful! Your account is pending admin approval. You will be notified once approved.',
+      message,
       data: {
         user: {
           id: user._id,
@@ -93,8 +99,8 @@ export const login = async (req, res) => {
       });
     }
 
-    // Check if user is approved
-    if (!user.isApproved || user.approvalStatus !== 'approved') {
+    // Check if user is approved (skip approval check for admin users)
+    if (user.role !== 'admin' && (!user.isApproved || user.approvalStatus !== 'approved')) {
       const statusMessages = {
         'pending': 'Your account is pending admin approval. Please wait for approval before logging in.',
         'rejected': `Your account has been rejected. ${user.rejectionReason || 'Please contact administrator for more information.'}`
