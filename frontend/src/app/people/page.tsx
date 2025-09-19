@@ -26,9 +26,7 @@ export default function People() {
 
   // Helper function to get avatar URL
   const getAvatarUrl = (avatarId: string) => {
-    const url = getApiUrl(`/files/avatar/${avatarId}`);
-    console.log('Generated avatar URL:', url, 'for avatar ID:', avatarId);
-    return url;
+    return getApiUrl(`/files/avatar/${avatarId}`);
   };
 
   useEffect(() => {
@@ -46,9 +44,7 @@ export default function People() {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('People data received:', data);
         if (data.success && data.data.users) {
-          console.log('Users with avatars:', data.data.users.map((u: User) => ({ name: `${u.firstName} ${u.lastName}`, avatar: u.profile?.avatar })));
           setPeople(data.data.users);
         } else {
           setPeople([]);
@@ -243,10 +239,6 @@ export default function People() {
                             alt={`${person.firstName} ${person.lastName}`}
                             className="w-full h-full object-cover rounded-full"
                             onError={(e) => {
-                              console.log('Avatar failed to load for:', person.firstName, person.lastName, 'Avatar ID:', person.profile?.avatar);
-                              if (person.profile?.avatar) {
-                                console.log('Avatar URL:', getAvatarUrl(person.profile.avatar));
-                              }
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                               const fallback = target.parentElement?.querySelector('.fallback-icon');
@@ -255,16 +247,13 @@ export default function People() {
                               }
                             }}
                             onLoad={() => {
-                              console.log('Avatar loaded successfully for:', person.firstName, person.lastName);
+                              // Avatar loaded successfully
                             }}
                           />
                           <UserIcon className="h-8 w-8 text-slate-400 hidden fallback-icon" />
                         </>
                       ) : (
-                        <>
-                          <UserIcon className="h-8 w-8 text-slate-400" />
-                          {console.log('No avatar for:', person.firstName, person.lastName)}
-                        </>
+                        <UserIcon className="h-8 w-8 text-slate-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
