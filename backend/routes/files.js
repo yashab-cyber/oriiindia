@@ -290,6 +290,26 @@ router.get('/download/:type/:fileId', authenticate, async (req, res) => {
   }
 });
 
+// Handle preflight requests for avatar endpoint
+router.options('/avatar/:fileId', (req, res) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://oriiindia0.vercel.app',
+    'https://oriiindia.vercel.app',
+    'https://oriiindia-git-main-yashab-cyber.vercel.app',
+    'https://oriiindia-yashab-cyber.vercel.app'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.sendStatus(200);
+});
+
 // Serve profile image (public access for display)
 router.get('/avatar/:fileId', async (req, res) => {
   try {
