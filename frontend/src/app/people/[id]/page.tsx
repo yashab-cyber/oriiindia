@@ -98,7 +98,16 @@ export default function PersonProfile() {
       if (response.ok) {
         const data = await response.json();
         console.log('Profile API response:', data); // Debug log
-        setPerson(data.data.user); // Fixed: use data.data.user instead of data.data
+        console.log('Extracting user data from:', data.data);
+        console.log('User object to set:', data.data.user);
+        
+        if (data.data && data.data.user) {
+          setPerson(data.data.user); // Fixed: use data.data.user instead of data.data
+          console.log('Person state set successfully:', data.data.user);
+        } else {
+          console.error('Invalid data structure:', data);
+          setError('Invalid data received from server');
+        }
       } else {
         console.error('Failed to fetch person:', response.status, response.statusText);
         setError('Person not found');
@@ -210,6 +219,18 @@ export default function PersonProfile() {
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
+      
+      {/* Debug info - remove this after fixing */}
+      {process.env.NODE_ENV === 'development' && person && (
+        <div className="bg-yellow-900/20 border border-yellow-600 p-4 m-4 rounded">
+          <details>
+            <summary className="text-yellow-400 cursor-pointer">Debug: Person Data</summary>
+            <pre className="text-xs mt-2 text-yellow-100">
+              {JSON.stringify(person, null, 2)}
+            </pre>
+          </details>
+        </div>
+      )}
       
       {/* Header Section */}
       <div className="bg-slate-800 border-b border-slate-700">

@@ -110,7 +110,7 @@ export default function ProfileUpdateTest() {
           }
 
         } catch (error) {
-          addTestResult('User Data Parsing', false, `Parse error: ${error.message}`);
+          addTestResult('User Data Parsing', false, `Parse error: ${error instanceof Error ? error.message : String(error)}`);
         }
       } else {
         addTestResult('User Data Exists', false, 'No user data found in localStorage');
@@ -120,7 +120,7 @@ export default function ProfileUpdateTest() {
       addTestResult('Navigation Test', true, 'Links should work normally after profile updates');
 
     } catch (error) {
-      addTestResult('Test Execution', false, `Test failed: ${error.message}`);
+      addTestResult('Test Execution', false, `Test failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     setIsRunningTests(false);
