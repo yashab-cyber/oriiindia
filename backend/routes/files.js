@@ -295,6 +295,23 @@ router.get('/avatar/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
 
+    // Set CORS headers for image display
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://oriiindia0.vercel.app',
+      'https://oriiindia.vercel.app',
+      'https://oriiindia-git-main-yashab-cyber.vercel.app',
+      'https://oriiindia-yashab-cyber.vercel.app'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+
     // Get file info
     const fileInfo = await getFileInfo(fileId, 'profile-images');
     if (!fileInfo) {
