@@ -32,7 +32,10 @@ app.use(helmet());
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
   'http://localhost:3000',
-  'https://oriiindia0.vercel.app' // Your actual Vercel URL
+  'https://oriiindia0.vercel.app', // Your actual Vercel URL
+  'https://oriiindia.vercel.app', // Alternative Vercel URL
+  'https://oriiindia-git-main-yashab-cyber.vercel.app', // Git branch URL
+  'https://oriiindia-yashab-cyber.vercel.app' // User-specific URL
 ];
 
 app.use(cors({

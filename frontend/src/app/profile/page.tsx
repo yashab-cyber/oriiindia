@@ -180,17 +180,44 @@ const ProfilePage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl(`/users/${user?._id}`), {
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+      
+      // Flatten the profile data to match backend expectations
+      const flattenedData: Record<string, any> = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      };
+
+      // Add profile fields with dot notation
+      if (formData.profile) {
+        Object.entries(formData.profile).forEach(([key, value]) => {
+          if (value !== undefined) {
+            flattenedData[`profile.${key}`] = value;
+          }
+        });
+      }
+
+      console.log('Sending update request to:', getApiUrl('/auth/me'));
+      console.log('Update data:', flattenedData);
+
+      const response = await fetch(getApiUrl('/auth/me'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(flattenedData)
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Update successful:', data);
         const updatedUser = data.data.user;
         
         setUser(updatedUser);
@@ -198,11 +225,39 @@ const ProfilePage = () => {
         setShowSuccessMessage(true);
         setTimeout(() => setShowSuccessMessage(false), 3000);
       } else {
-        throw new Error('Failed to update profile');
+        const errorText = await response.text();
+        console.error('Update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || `Server error: ${response.status}`;
+        } catch {
+          errorMessage = `Server error: ${response.status} - ${errorText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile');
+      console.error('Profile update error:', error);
+      
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Check for common network errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error: Unable to connect to server. Please check your internet connection.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage = 'Security error: Cross-origin request blocked. Please contact support.';
+        }
+      }
+      
+      alert(`Failed to update profile: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ORII API Test</title>
+</head>
+<body>
+    <h1>ORII API Connection Test</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <button onclick="testAuth()">Test Authentication</button>
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'https://oriiindia.onrender.com';
+        
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing API connection...</p>';
+            
+            try {
+                const response = await fetch(API_URL + '/api/health');
+                const data = await response.json();
+                results.innerHTML = `
+                    <h3>API Test Results:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Response: ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <h3>API Test Failed:</h3>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testAuth() {
+            const results = document.getElementById('results');
+            const token = prompt('Enter your JWT token:');
+            
+            if (!token) {
+                results.innerHTML = '<p>No token provided</p>';
+                return;
+            }
+            
+            results.innerHTML = '<p>Testing authentication...</p>';
+            
+            try {
+                const response = await fetch(API_URL + '/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                results.innerHTML = `
+                    <h3>Auth Test Results:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Response: ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <h3>Auth Test Failed:</h3>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
