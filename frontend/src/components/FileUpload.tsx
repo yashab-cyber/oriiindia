@@ -155,7 +155,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
       formData.append('file', uploadedFile.file);
     } else if (uploadType === 'profile-images') {
-      formData.append('avatar', uploadedFile.file);
+      formData.append('image', uploadedFile.file); // Changed from 'avatar' to 'image'
     } else {
       formData.append('document', uploadedFile.file);
     }
@@ -165,10 +165,20 @@ const FileUpload: React.FC<FileUploadProps> = ({
       throw new Error('Authentication required');
     }
 
-    let url = getApiUrl(`/files/upload/${uploadType}`);
-    if (uploadType === 'research-papers' && paperId) {
-      url += `/${paperId}`;
+    // Fix URL for profile images (singular)
+    let url;
+    if (uploadType === 'profile-images') {
+      url = getApiUrl('/files/upload/profile-image'); // Changed to singular
+    } else {
+      url = getApiUrl(`/files/upload/${uploadType}`);
+      if (uploadType === 'research-papers' && paperId) {
+        url += `/${paperId}`;
+      }
     }
+
+    console.log('Upload URL:', url);
+    console.log('Upload type:', uploadType);
+    console.log('File field name:', uploadType === 'profile-images' ? 'image' : uploadType === 'research-papers' ? 'file' : 'document');
 
     const response = await fetch(url, {
       method: 'POST',
@@ -178,12 +188,30 @@ const FileUpload: React.FC<FileUploadProps> = ({
       body: formData
     });
 
+    console.log('Upload response status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Upload failed');
+      const errorText = await response.text();
+      console.error('Upload failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || `Upload failed with status ${response.status}`;
+      } catch {
+        errorMessage = `Upload failed: ${response.status} - ${errorText}`;
+      }
+      
+      throw new Error(errorMessage);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('Upload successful:', result);
+    return result;
   };
 
   // Handle upload

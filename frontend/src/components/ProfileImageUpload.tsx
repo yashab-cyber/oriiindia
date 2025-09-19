@@ -23,15 +23,24 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
 
-  const handleUploadSuccess = (fileData: any) => {
+  const handleUploadSuccess = (response: any) => {
     setIsUploading(false);
     setShowUploader(false);
-    onAvatarUpdate?.(fileData.file.fileId);
+    console.log('Profile image upload response:', response);
+    
+    // The backend returns the file data in response.data.file
+    const fileId = response.data?.file?.fileId || response.file?.fileId;
+    if (fileId) {
+      onAvatarUpdate?.(fileId);
+    } else {
+      console.error('No fileId found in response:', response);
+    }
   };
 
   const handleUploadError = (error: string) => {
     setIsUploading(false);
     console.error('Avatar upload error:', error);
+    alert(`Failed to upload profile image: ${error}`);
   };
 
   const getAvatarUrl = (avatarId: string) => {
@@ -63,15 +72,16 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         </div>
 
         <div>
-          <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-slate-100">Profile Photo</h3>
+          <p className="text-sm text-slate-400">
             Upload a professional photo for your profile
           </p>
           <button
             onClick={() => setShowUploader(true)}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+            disabled={isUploading}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
           >
-            {currentAvatar ? 'Change Photo' : 'Upload Photo'}
+            {isUploading ? 'Uploading...' : (currentAvatar ? 'Change Photo' : 'Upload Photo')}
           </button>
         </div>
       </div>
@@ -79,14 +89,14 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       {/* Upload Modal */}
       {showUploader && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-slate-100">
                 Upload Profile Photo
               </h3>
               <button
                 onClick={() => setShowUploader(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-200"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -104,7 +114,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
             <div className="mt-4 flex justify-end space-x-3">
               <button
                 onClick={() => setShowUploader(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 text-slate-300 bg-slate-700 border border-slate-600 rounded-md hover:bg-slate-600 transition-colors"
               >
                 Cancel
               </button>
