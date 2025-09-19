@@ -101,7 +101,9 @@ export default function PersonProfile() {
   };
 
   const getAvatarUrl = (avatarId: string) => {
-    return getApiUrl(`/files/avatar/${avatarId}`);
+    const url = getApiUrl(`/files/avatar/${avatarId}`);
+    console.log('Generated avatar URL:', url, 'for avatar ID:', avatarId);
+    return url;
   };
 
   if (loading) {
