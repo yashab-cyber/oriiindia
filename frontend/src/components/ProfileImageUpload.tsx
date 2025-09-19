@@ -43,6 +43,44 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     alert(`Failed to upload profile image: ${error}`);
   };
 
+  const handleRemoveAvatar = async () => {
+    if (!confirm('Are you sure you want to remove your profile photo?')) {
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(getApiUrl('/auth/me'), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          'profile.avatar': '' // Clear the avatar field
+        })
+      });
+
+      if (response.ok) {
+        onAvatarUpdate?.(''); // Clear the avatar in parent component
+        alert('Profile photo removed successfully');
+      } else {
+        throw new Error('Failed to remove profile photo');
+      }
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+      alert('Failed to remove profile photo');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const getAvatarUrl = (avatarId: string) => {
     return getApiUrl(`/files/avatar/${avatarId}`);
   };
@@ -90,10 +128,20 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           <button
             onClick={() => setShowUploader(true)}
             disabled={isUploading}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
+            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors mr-2"
           >
             {isUploading ? 'Uploading...' : (currentAvatar ? 'Change Photo' : 'Upload Photo')}
           </button>
+          
+          {currentAvatar && (
+            <button
+              onClick={handleRemoveAvatar}
+              disabled={isUploading}
+              className="mt-2 px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
+            >
+              Remove Photo
+            </button>
+          )}
         </div>
       </div>
 

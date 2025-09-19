@@ -120,7 +120,7 @@ const ProfilePage = () => {
         ...user!,
         profile: {
           ...user!.profile,
-          avatar: avatarId
+          avatar: avatarId || undefined // Clear avatar if empty string
         }
       };
       
