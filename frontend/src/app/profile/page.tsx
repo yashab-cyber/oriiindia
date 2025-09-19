@@ -225,8 +225,18 @@ const ProfilePage = () => {
         console.log('Update successful:', data);
         const updatedUser = data.data.user;
         
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Preserve the current avatar if it exists in the current state
+        const preservedUser = {
+          ...updatedUser,
+          profile: {
+            ...updatedUser.profile,
+            avatar: formData.profile?.avatar || updatedUser.profile?.avatar
+          }
+        };
+        
+        setUser(preservedUser);
+        setFormData(preservedUser); // Keep form data in sync
+        localStorage.setItem('user', JSON.stringify(preservedUser));
         setShowSuccessMessage(true);
         setTimeout(() => setShowSuccessMessage(false), 3000);
       } else {

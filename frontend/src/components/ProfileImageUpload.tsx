@@ -51,31 +51,41 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     <div className={`space-y-4 ${className}`}>
       {/* Current Avatar Display */}
       <div className="flex items-center space-x-6">
-        <div className="relative">
+        <div className="relative group">
           {currentAvatar ? (
             <img
               src={getAvatarUrl(currentAvatar)}
               alt="Profile"
-              className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-lg"
+              className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer"
               crossOrigin="anonymous"
+              onClick={() => {
+                // Optional: Could open a larger view modal here in the future
+                console.log('Avatar clicked - viewing avatar');
+              }}
             />
           ) : (
-            <UserCircleIcon className="h-20 w-20 text-gray-400" />
+            <div className="h-20 w-20 rounded-full bg-slate-700 border-4 border-white shadow-lg flex items-center justify-center">
+              <UserCircleIcon className="h-16 w-16 text-gray-400" />
+            </div>
           )}
           
-          {/* Upload overlay button */}
+          {/* Small upload button in corner */}
           <button
             onClick={() => setShowUploader(true)}
-            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center border-2 border-white shadow-lg transition-colors"
+            title={currentAvatar ? 'Change photo' : 'Upload photo'}
           >
-            <CameraIcon className="h-8 w-8 text-white" />
+            <CameraIcon className="h-4 w-4 text-white" />
           </button>
         </div>
 
         <div>
           <h3 className="text-lg font-medium text-slate-100">Profile Photo</h3>
           <p className="text-sm text-slate-400">
-            Upload a professional photo for your profile
+            {currentAvatar 
+              ? 'Click the camera icon to change your photo'
+              : 'Upload a professional photo for your profile'
+            }
           </p>
           <button
             onClick={() => setShowUploader(true)}
