@@ -97,11 +97,14 @@ export default function PersonProfile() {
       
       if (response.ok) {
         const data = await response.json();
-        setPerson(data.data);
+        console.log('Profile API response:', data); // Debug log
+        setPerson(data.data.user); // Fixed: use data.data.user instead of data.data
       } else {
+        console.error('Failed to fetch person:', response.status, response.statusText);
         setError('Person not found');
       }
     } catch (error) {
+      console.error('Error fetching person profile:', error);
       setError('Failed to load person profile');
     } finally {
       setLoading(false);
