@@ -8,8 +8,6 @@ const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [consecutiveErrors, setConsecutiveErrors] = useState(0);
-  const [pollingEnabled, setPollingEnabled] = useState(true);
 
   useEffect(() => {
     // Check authentication status
@@ -21,24 +19,16 @@ const NotificationBell: React.FC = () => {
       fetchUnreadCount();
     }
     
-    // Only poll if authenticated and polling is enabled
+    // Only poll if authenticated
     let interval: NodeJS.Timeout | null = null;
-    if (token && userData && pollingEnabled) {
-      interval = setInterval(() => {
-        // Stop polling if too many consecutive errors
-        if (consecutiveErrors >= 5) {
-          console.log('Too many notification errors, stopping polling');
-          setPollingEnabled(false);
-          return;
-        }
-        fetchUnreadCount();
-      }, 30000);
+    if (token && userData) {
+      interval = setInterval(fetchUnreadCount, 30000);
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [consecutiveErrors, pollingEnabled]);
+  }, []);
 
   const fetchUnreadCount = async () => {
     try {
@@ -53,37 +43,25 @@ const NotificationBell: React.FC = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.data.unreadCount);
-        // Reset error count on successful fetch
-        setConsecutiveErrors(0);
       } else if (response.status === 401) {
         console.log('Auth token invalid, user may need to log in again');
         setUnreadCount(0);
-        setConsecutiveErrors(prev => prev + 1);
       } else if (response.status === 404) {
         console.log('Notifications endpoint not found');
         setUnreadCount(0);
-        setConsecutiveErrors(prev => prev + 1);
       } else {
         console.warn('Failed to fetch unread count:', response.status, response.statusText);
         setUnreadCount(0);
-        setConsecutiveErrors(prev => prev + 1);
       }
     } catch (error) {
-      // Increment error count for any fetch error
-      setConsecutiveErrors(prev => prev + 1);
-      
       // Don't spam console with fetch errors - just silently fail
-      if (error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_CLOSED'))) {
-        console.log('Network error fetching notifications (backend may be down)');
-      } else if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Notification request timed out');
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.log('Network error fetching notifications (backend may be sleeping)');
       } else {
         console.error('Error fetching unread count:', error);
       }

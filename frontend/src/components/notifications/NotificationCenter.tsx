@@ -86,8 +86,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
       if (response.ok) {
@@ -110,10 +108,8 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
         setNotifications([]);
       }
     } catch (error) {
-      if (error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_CLOSED'))) {
-        console.log('Network error fetching notifications (backend may be down)');
-      } else if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Notification request timed out');
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.log('Network error fetching notifications (backend may be sleeping)');
       } else {
         console.error('Error fetching notifications:', error);
       }
