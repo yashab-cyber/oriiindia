@@ -251,7 +251,7 @@ export default function PersonProfile() {
       
       {/* Always visible debug info to help troubleshoot */}
       <div className="bg-red-900/20 border border-red-600 p-4 m-4 rounded">
-        <h3 className="text-red-400 font-bold">🔧 Debug Info (Remove after fixing):</h3>
+        <h3 className="text-red-400 font-bold">🔧 Debug Info (Remove after fixing) - Updated:</h3>
         <div className="text-red-100 text-sm mt-2">
           <p><strong>Person object exists:</strong> {person ? 'YES' : 'NO'}</p>
           {person && (
@@ -266,6 +266,7 @@ export default function PersonProfile() {
               )}
             </>
           )}
+          <p className="mt-2 text-yellow-300"><strong>Deployment Check:</strong> {new Date().toISOString()}</p>
         </div>
       </div>
       
