@@ -92,14 +92,11 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         <div className="relative group">
           {currentAvatar ? (
             <img
+              key={currentAvatar} // Force re-render when avatar changes
               src={getAvatarUrl(currentAvatar)}
-              alt="Profile"
-              className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer"
+              alt="Current profile picture"
+              className="w-24 h-24 rounded-full object-cover border-2 border-slate-600"
               crossOrigin="anonymous"
-              onClick={() => {
-                // Optional: Could open a larger view modal here in the future
-                console.log('Avatar clicked - viewing avatar');
-              }}
             />
           ) : (
             <div className="h-20 w-20 rounded-full bg-slate-700 border-4 border-white shadow-lg flex items-center justify-center">

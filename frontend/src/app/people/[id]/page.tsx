@@ -25,6 +25,7 @@ export default function PersonProfile() {
   const [publications, setPublications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
   useEffect(() => {
     if (params.id) {
@@ -59,6 +60,11 @@ export default function PersonProfile() {
   const fetchPerson = async (id: string, forceRefresh = false) => {
     try {
       setLoading(true);
+      
+      // Update refresh timestamp for cache-busting avatar URLs when force refreshing
+      if (forceRefresh) {
+        setRefreshTimestamp(Date.now());
+      }
       
       const url = forceRefresh 
         ? getApiUrl(`/users/${id}?t=${Date.now()}`) 
@@ -131,7 +137,7 @@ export default function PersonProfile() {
   };
 
   const getAvatarUrl = (avatarId: string) => {
-    return getApiUrl(`/files/avatar/${avatarId}`);
+    return getApiUrl(`/files/avatar/${avatarId}?t=${refreshTimestamp}`);
   };
 
   if (loading) {

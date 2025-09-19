@@ -24,10 +24,11 @@ export default function People() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now());
 
-  // Helper function to get avatar URL
+  // Helper function to get avatar URL with cache busting
   const getAvatarUrl = (avatarId: string) => {
-    return getApiUrl(`/files/avatar/${avatarId}`);
+    return getApiUrl(`/files/avatar/${avatarId}?t=${refreshTimestamp}`);
   };
 
   useEffect(() => {
@@ -74,6 +75,11 @@ export default function People() {
   const fetchPeople = async (forceRefresh = false) => {
     try {
       setLoading(true);
+      
+      // Update refresh timestamp for cache-busting avatar URLs when force refreshing
+      if (forceRefresh) {
+        setRefreshTimestamp(Date.now());
+      }
       
       // Add cache-busting parameter when force refreshing
       const url = forceRefresh 
