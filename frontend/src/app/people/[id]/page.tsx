@@ -226,6 +226,7 @@ export default function PersonProfile() {
             <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-600 overflow-hidden">
               {person.profile?.avatar ? (
                 <img
+                  key={`${person.profile.avatar}-${refreshTimestamp}`} // Force re-render on avatar or timestamp change
                   src={getAvatarUrl(person.profile.avatar)}
                   alt={`${person.firstName} ${person.lastName}`}
                   className="w-full h-full object-cover rounded-full"

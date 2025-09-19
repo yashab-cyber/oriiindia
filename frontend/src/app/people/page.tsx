@@ -308,6 +308,7 @@ export default function People() {
                       {person.profile?.avatar ? (
                         <>
                           <img
+                            key={`${person.profile.avatar}-${refreshTimestamp}`} // Force re-render on avatar or timestamp change
                             src={getAvatarUrl(person.profile.avatar)}
                             alt={`${person.firstName} ${person.lastName}`}
                             className="w-full h-full object-cover rounded-full"
