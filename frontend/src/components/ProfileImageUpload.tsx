@@ -57,6 +57,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               src={getAvatarUrl(currentAvatar)}
               alt="Profile"
               className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-lg"
+              crossOrigin="anonymous"
             />
           ) : (
             <UserCircleIcon className="h-20 w-20 text-gray-400" />

@@ -301,13 +301,20 @@ router.options('/avatar/:fileId', (req, res) => {
     'https://oriiindia-yashab-cyber.vercel.app'
   ];
   
-  // Set CORS headers
-  if (!origin || allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+  // Set CORS headers for preflight
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
   }
-  res.header('Access-Control-Allow-Credentials', 'true');
+  
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+  
+  // Don't set credentials for anonymous cross-origin requests
+  // res.header('Access-Control-Allow-Credentials', 'true');
+  
   res.sendStatus(200);
 });
 
@@ -316,7 +323,7 @@ router.get('/avatar/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
 
-    // Set CORS headers for image display
+    // Set CORS headers for image display - more permissive for anonymous access
     const origin = req.headers.origin;
     const allowedOrigins = [
       'http://localhost:3000',
@@ -326,13 +333,21 @@ router.get('/avatar/:fileId', async (req, res) => {
       'https://oriiindia-yashab-cyber.vercel.app'
     ];
     
-    // More permissive CORS for image serving
-    if (!origin || allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin || '*');
+    // Always set CORS headers for image serving
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else if (!origin) {
+      // For direct requests without origin (like curl or direct browser access)
+      res.header('Access-Control-Allow-Origin', '*');
     }
-    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Essential headers for crossorigin="anonymous" image loading
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+    
+    // Don't set credentials for anonymous cross-origin image requests
+    // res.header('Access-Control-Allow-Credentials', 'true');
 
     // Get file info
     const fileInfo = await getFileInfo(fileId, 'profile-images');

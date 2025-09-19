@@ -238,6 +238,7 @@ export default function People() {
                             src={getAvatarUrl(person.profile.avatar)}
                             alt={`${person.firstName} ${person.lastName}`}
                             className="w-full h-full object-cover rounded-full"
+                            crossOrigin="anonymous"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
