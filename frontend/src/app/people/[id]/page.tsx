@@ -48,12 +48,33 @@ export default function PersonProfile() {
       }
     };
 
+    // Listen for avatar change events
+    const handleAvatarChange = (e: CustomEvent) => {
+      console.log('Avatar change detected on profile page:', e.detail);
+      setRefreshTimestamp(Date.now());
+      // If the avatar change is for the current user, refresh their data
+      if (e.detail.userId === params.id) {
+        fetchPerson(params.id as string, true);
+      }
+    };
+
+    // Listen for localStorage changes for cross-tab synchronization
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'avatarChangeTimestamp') {
+        setRefreshTimestamp(Date.now());
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('avatarChanged', handleAvatarChange as EventListener);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('avatarChanged', handleAvatarChange as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [params.id]);
 

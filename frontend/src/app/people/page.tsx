@@ -59,16 +59,30 @@ export default function People() {
         // User data changed, refresh people list
         fetchPeople(true);
       }
+      // Also listen for avatar change timestamp
+      if (e.key === 'avatarChangeTimestamp') {
+        setRefreshTimestamp(Date.now());
+      }
+    };
+
+    // Listen for avatar change events from profile page
+    const handleAvatarChange = (e: CustomEvent) => {
+      console.log('Avatar change detected:', e.detail);
+      setRefreshTimestamp(Date.now());
+      // Optionally refresh the people list to get latest user data
+      fetchPeople(true);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('avatarChanged', handleAvatarChange as EventListener);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('avatarChanged', handleAvatarChange as EventListener);
     };
   }, []);
 

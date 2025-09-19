@@ -127,6 +127,20 @@ const ProfilePage = () => {
       setUser(updatedUser);
       setFormData(updatedUser); // Also update form data
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Broadcast avatar change to all pages for cache invalidation
+      const avatarChangeEvent = new CustomEvent('avatarChanged', {
+        detail: { 
+          userId: user?._id, 
+          avatarId: avatarId,
+          timestamp: Date.now()
+        }
+      });
+      window.dispatchEvent(avatarChangeEvent);
+      
+      // Also trigger localStorage change event for cross-tab synchronization
+      localStorage.setItem('avatarChangeTimestamp', Date.now().toString());
+      
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 3000);
       
