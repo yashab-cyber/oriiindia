@@ -239,18 +239,31 @@ const ProfilePage = () => {
         console.log('Update successful:', data);
         const updatedUser = data.data.user;
         
-        // Preserve the current avatar if it exists in the current state
+        // Preserve the current avatar from the original user state
         const preservedUser = {
           ...updatedUser,
           profile: {
             ...updatedUser.profile,
-            avatar: formData.profile?.avatar || updatedUser.profile?.avatar
+            avatar: user?.profile?.avatar || updatedUser.profile?.avatar
           }
         };
+        
+        console.log('Preserved user with avatar:', preservedUser);
         
         setUser(preservedUser);
         setFormData(preservedUser); // Keep form data in sync
         localStorage.setItem('user', JSON.stringify(preservedUser));
+        
+        // Broadcast avatar preservation to ensure all pages stay in sync
+        const avatarUpdateEvent = new CustomEvent('avatarChanged', {
+          detail: { 
+            userId: user?._id, 
+            avatarId: preservedUser.profile?.avatar,
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(avatarUpdateEvent);
+        
         setShowSuccessMessage(true);
         setTimeout(() => setShowSuccessMessage(false), 3000);
       } else {

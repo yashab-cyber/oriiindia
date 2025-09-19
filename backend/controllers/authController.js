@@ -167,7 +167,8 @@ export const updateProfile = async (req, res) => {
       'profile.researchInterests',
       'profile.website',
       'profile.linkedIn',
-      'profile.orcid'
+      'profile.orcid',
+      'profile.avatar'
     ];
 
     const updates = {};

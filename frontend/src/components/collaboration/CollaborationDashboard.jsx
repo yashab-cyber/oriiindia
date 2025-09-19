@@ -124,7 +124,16 @@ const CollaborationDashboard = () => {
     const StatusIcon = statusIcon.icon;
 
     // Check if current user has pending invitation
-    const currentUserId = JSON.parse(localStorage.getItem('user'))?.id;
+    let currentUserId = null;
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        currentUserId = JSON.parse(userData)?.id;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+    
     const userCollaborator = collaboration.collaborators?.find(c => c.user._id === currentUserId);
     const hasPendingInvitation = userCollaborator?.status === 'pending';
 

@@ -67,8 +67,18 @@ export default function UploadPage() {
         const data = await response.json();
         if (data.success && data.data.papers) {
           // Filter papers by current user
+          let currentUserId = null;
+          try {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+              currentUserId = JSON.parse(userData)._id;
+            }
+          } catch (error) {
+            console.error('Error parsing user data:', error);
+          }
+          
           const userPapers = data.data.papers.filter((paper: any) => 
-            paper.submittedBy._id === JSON.parse(localStorage.getItem('user') || '{}')._id
+            paper.submittedBy._id === currentUserId
           );
           setPapers(userPapers);
         }

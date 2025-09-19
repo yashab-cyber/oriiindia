@@ -12,11 +12,17 @@ import {
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
 import NotificationBell from './notifications/NotificationBell'
+import { getApiUrl } from '@/lib/config'
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Helper function to get avatar URL
+  const getAvatarUrl = (avatarId: string) => {
+    return getApiUrl(`/files/avatar/${avatarId}`);
+  };
 
   useEffect(() => {
     // Check for stored user data
@@ -24,9 +30,51 @@ const Header = () => {
     const token = localStorage.getItem('token')
     
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser))
-      setIsAuthenticated(true)
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        // Clear corrupted data
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
+
+    // Listen for localStorage changes (when profile is updated)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' && e.newValue) {
+        try {
+          const updatedUser = JSON.parse(e.newValue);
+          setUser(updatedUser);
+        } catch (error) {
+          console.error('Error parsing updated user data:', error);
+        }
+      }
+    };
+
+    // Listen for avatar change events
+    const handleAvatarChange = (e: CustomEvent) => {
+      // Refresh user data from localStorage
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const updatedUser = JSON.parse(storedUser);
+          setUser(updatedUser);
+        } catch (error) {
+          console.error('Error parsing user data after avatar change:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('avatarChanged', handleAvatarChange as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('avatarChanged', handleAvatarChange as EventListener);
+    };
   }, [])
 
   const handleLogout = () => {
@@ -94,17 +142,26 @@ const Header = () => {
                   <div>
                     <Menu.Button className="flex max-w-xs items-center rounded-full bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 p-1">
                       <span className="sr-only">Open user menu</span>
-                      {user?.profilePicture ? (
+                      {user?.profile?.avatar ? (
                         <img
                           className="h-8 w-8 rounded-full border-2 border-slate-600"
-                          src={user.profilePicture}
+                          src={getAvatarUrl(user.profile.avatar)}
                           alt={`${user.firstName} ${user.lastName}`}
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            // Fallback to icon if image fails to load
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.parentElement?.querySelector('.fallback-icon');
+                            if (fallback) {
+                              fallback.classList.remove('hidden');
+                            }
+                          }}
                         />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-slate-600 flex items-center justify-center">
-                          <UserIcon className="h-5 w-5 text-slate-300" />
-                        </div>
-                      )}
+                      ) : null}
+                      <div className={`h-8 w-8 rounded-full bg-slate-600 flex items-center justify-center fallback-icon ${user?.profile?.avatar ? 'hidden' : ''}`}>
+                        <UserIcon className="h-5 w-5 text-slate-300" />
+                      </div>
                     </Menu.Button>
                   </div>
                   <Transition
