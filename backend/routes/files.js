@@ -301,8 +301,9 @@ router.options('/avatar/:fileId', (req, res) => {
     'https://oriiindia-yashab-cyber.vercel.app'
   ];
   
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+  // Set CORS headers
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
   }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -325,8 +326,9 @@ router.get('/avatar/:fileId', async (req, res) => {
       'https://oriiindia-yashab-cyber.vercel.app'
     ];
     
-    if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
+    // More permissive CORS for image serving
+    if (!origin || allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin || '*');
     }
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
