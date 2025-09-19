@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Role Update Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .result.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .result.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .result.info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin Role Update Test</h1>
+        
+        <div class="info result">
+            <strong>Purpose:</strong> Test if admin can update user roles after the fix
+        </div>
+        
+        <h2>1. Login as Admin</h2>
+        <div>
+            <input type="email" id="email" placeholder="Admin Email" value="yashabalam707@gmail.com">
+            <input type="password" id="password" placeholder="Password" value="">
+            <button onclick="loginAdmin()">Login</button>
+        </div>
+        <div id="loginResult"></div>
+        
+        <h2>2. Get Users List</h2>
+        <button onclick="fetchUsers()">Fetch Users</button>
+        <div id="usersResult"></div>
+        
+        <h2>3. Update User Role</h2>
+        <div>
+            <input type="text" id="userId" placeholder="User ID">
+            <select id="newRole">
+                <option value="admin">Admin</option>
+                <option value="faculty">Faculty</option>
+                <option value="researcher">Researcher</option>
+                <option value="student">Student</option>
+                <option value="visitor">Visitor</option>
+            </select>
+            <button onclick="updateRole()">Update Role</button>
+        </div>
+        <div id="updateResult"></div>
+    </div>
+
+    <script>
+        let authToken = '';
+        const API_BASE = 'https://oriiindia.onrender.com/api';
+
+        async function loginAdmin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    authToken = result.data.token;
+                    document.getElementById('loginResult').innerHTML = 
+                        `<div class="success result">✅ Login successful! Role: ${result.data.user.role}</div>`;
+                } else {
+                    document.getElementById('loginResult').innerHTML = 
+                        `<div class="error result">❌ Login failed: ${result.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = 
+                    `<div class="error result">❌ Login error: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchUsers() {
+            if (!authToken) {
+                document.getElementById('usersResult').innerHTML = 
+                    '<div class="error result">❌ Please login first</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    const users = result.data.users.slice(0, 3); // Show first 3 users
+                    let html = '<div class="success result">✅ Users fetched successfully:</div>';
+                    users.forEach(user => {
+                        html += `<div class="info result">
+                            <strong>${user.firstName} ${user.lastName}</strong> 
+                            (${user.role}) - ID: ${user._id}
+                            <button onclick="document.getElementById('userId').value='${user._id}'">Select</button>
+                        </div>`;
+                    });
+                    document.getElementById('usersResult').innerHTML = html;
+                } else {
+                    document.getElementById('usersResult').innerHTML = 
+                        `<div class="error result">❌ Failed to fetch users: ${result.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('usersResult').innerHTML = 
+                    `<div class="error result">❌ Fetch error: ${error.message}</div>`;
+            }
+        }
+
+        async function updateRole() {
+            const userId = document.getElementById('userId').value;
+            const newRole = document.getElementById('newRole').value;
+            
+            if (!authToken) {
+                document.getElementById('updateResult').innerHTML = 
+                    '<div class="error result">❌ Please login first</div>';
+                return;
+            }
+            
+            if (!userId) {
+                document.getElementById('updateResult').innerHTML = 
+                    '<div class="error result">❌ Please enter a user ID</div>';
+                return;
+            }
+            
+            try {
+                console.log('Updating role:', { userId, newRole, authToken: authToken ? 'Present' : 'Missing' });
+                
+                const response = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role: newRole })
+                });
+                
+                const result = await response.json();
+                console.log('Update response:', result);
+                
+                if (response.ok && result.success) {
+                    document.getElementById('updateResult').innerHTML = 
+                        `<div class="success result">✅ Role updated successfully! New role: ${result.data.user.role}</div>`;
+                } else {
+                    document.getElementById('updateResult').innerHTML = 
+                        `<div class="error result">❌ Failed to update role: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                document.getElementById('updateResult').innerHTML = 
+                    `<div class="error result">❌ Update error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

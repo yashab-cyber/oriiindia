@@ -91,39 +91,25 @@ export default function PersonProfile() {
         ? getApiUrl(`/users/${id}?t=${Date.now()}`) 
         : getApiUrl(`/users/${id}`);
       
-      console.log('🔍 Fetching person profile from URL:', url);
-      console.log('🔍 User ID:', id);
-      
       const response = await fetch(url, {
         cache: forceRefresh ? 'no-cache' : 'default'
       });
       
-      console.log('🔍 Response status:', response.status);
-      console.log('🔍 Response ok:', response.ok);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('🔍 Raw API response:', data);
-        console.log('🔍 Response structure check:');
-        console.log('  - data exists:', !!data);
-        console.log('  - data.data exists:', !!data.data);
-        console.log('  - data.data.user exists:', !!data.data?.user);
-        console.log('🔍 User object to set:', data.data?.user);
         
         if (data.success && data.data && data.data.user) {
-          console.log('✅ Setting person state with:', data.data.user);
-          setPerson(data.data.user); // CRITICAL FIX: use data.data.user instead of data.data
-          console.log('✅ Person state set successfully');
+          setPerson(data.data.user); // Use data.data.user from API response
         } else {
-          console.error('❌ Invalid data structure received:', data);
+          console.error('Invalid data structure received:', data);
           setError('Invalid data received from server');
         }
       } else {
-        console.error('❌ API call failed:', response.status, response.statusText);
+        console.error('Failed to fetch person:', response.status, response.statusText);
         setError('Person not found');
       }
     } catch (error) {
-      console.error('❌ Error fetching person profile:', error);
+      console.error('Error fetching person profile:', error);
       setError('Failed to load person profile');
     } finally {
       setLoading(false);
@@ -236,39 +222,6 @@ export default function PersonProfile() {
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
-      
-      {/* Debug info - remove this after fixing */}
-      {process.env.NODE_ENV === 'development' && person && (
-        <div className="bg-yellow-900/20 border border-yellow-600 p-4 m-4 rounded">
-          <details>
-            <summary className="text-yellow-400 cursor-pointer">Debug: Person Data</summary>
-            <pre className="text-xs mt-2 text-yellow-100">
-              {JSON.stringify(person, null, 2)}
-            </pre>
-          </details>
-        </div>
-      )}
-      
-      {/* Always visible debug info to help troubleshoot */}
-      <div className="bg-red-900/20 border border-red-600 p-4 m-4 rounded">
-        <h3 className="text-red-400 font-bold">🔧 Debug Info (Remove after fixing) - Updated:</h3>
-        <div className="text-red-100 text-sm mt-2">
-          <p><strong>Person object exists:</strong> {person ? 'YES' : 'NO'}</p>
-          {person && (
-            <>
-              <p><strong>Role:</strong> {person.role || 'NULL/UNDEFINED'}</p>
-              <p><strong>Created At:</strong> {person.createdAt || 'NULL/UNDEFINED'}</p>
-              <p><strong>First Name:</strong> {person.firstName || 'NULL/UNDEFINED'}</p>
-              <p><strong>Last Name:</strong> {person.lastName || 'NULL/UNDEFINED'}</p>
-              <p><strong>Profile exists:</strong> {person.profile ? 'YES' : 'NO'}</p>
-              {person.profile && (
-                <p><strong>Profile title:</strong> {person.profile.title || 'NULL/UNDEFINED'}</p>
-              )}
-            </>
-          )}
-          <p className="mt-2 text-yellow-300"><strong>Deployment Check:</strong> {new Date().toISOString()}</p>
-        </div>
-      </div>
       
       {/* Header Section */}
       <div className="bg-slate-800 border-b border-slate-700">

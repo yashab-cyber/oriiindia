@@ -175,7 +175,7 @@ router.patch('/users/:userId/role', async (req, res) => {
     const { role } = req.body;
 
     // Validate role
-    const validRoles = ['admin', 'researcher', 'student', 'faculty'];
+    const validRoles = ['admin', 'researcher', 'student', 'faculty', 'visitor'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,

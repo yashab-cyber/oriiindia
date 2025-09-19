@@ -132,6 +132,9 @@ const UserManagement = () => {
   const updateUserRole = async (userId: string, role: string) => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Updating user role:', { userId, role });
+      console.log('Using token:', token ? 'Present' : 'Missing');
+      
       const response = await fetch(getApiUrl(`/admin/users/${userId}/role`), {
         method: 'PATCH',
         headers: {
@@ -141,16 +144,23 @@ const UserManagement = () => {
         body: JSON.stringify({ role })
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('Success response:', result);
         // Refresh user list
         fetchUsers(pagination.currentPage);
         alert('User role updated successfully!');
       } else {
-        alert('Failed to update user role');
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        alert(`Failed to update user role: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating user role:', error);
-      alert('Error updating user role');
+      alert(`Error updating user role: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -160,6 +170,7 @@ const UserManagement = () => {
       case 'faculty': return 'bg-purple-100 text-purple-800';
       case 'researcher': return 'bg-blue-100 text-blue-800';
       case 'student': return 'bg-green-100 text-green-800';
+      case 'visitor': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -311,6 +322,7 @@ const UserManagement = () => {
                         <option value="faculty">Faculty</option>
                         <option value="researcher">Researcher</option>
                         <option value="student">Student</option>
+                        <option value="visitor">Visitor</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
