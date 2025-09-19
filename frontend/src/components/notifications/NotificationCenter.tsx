@@ -68,6 +68,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
       setLoading(true);
       const token = localStorage.getItem('token');
       
+      if (!token) {
+        console.log('No auth token found, skipping notifications fetch');
+        return;
+      }
+      
       let url = getApiUrl(`/notifications?page=${pageNum}&limit=10`);
       
       if (currentFilter === 'unread') {
@@ -92,9 +97,23 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
         }
         setHasMore(data.data.pagination.hasNext);
         setPage(pageNum);
+      } else if (response.status === 401) {
+        console.log('Auth token invalid for notifications');
+        setNotifications([]);
+      } else if (response.status === 404) {
+        console.log('Notifications endpoint not found');
+        setNotifications([]);
+      } else {
+        console.warn('Failed to fetch notifications:', response.status, response.statusText);
+        setNotifications([]);
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.log('Network error fetching notifications (backend may be sleeping)');
+      } else {
+        console.error('Error fetching notifications:', error);
+      }
+      setNotifications([]);
     } finally {
       setLoading(false);
     }

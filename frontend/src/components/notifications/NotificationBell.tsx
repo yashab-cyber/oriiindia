@@ -7,20 +7,36 @@ import NotificationCenter from './NotificationCenter';
 const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    fetchUnreadCount();
+    // Check authentication status
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
     
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
+    if (token && userData) {
+      setIsAuthenticated(true);
+      fetchUnreadCount();
+    }
     
-    return () => clearInterval(interval);
+    // Only poll if authenticated
+    let interval: NodeJS.Timeout | null = null;
+    if (token && userData) {
+      interval = setInterval(fetchUnreadCount, 30000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.log('No auth token found, skipping notification fetch');
+        return;
+      }
 
       const response = await fetch(getApiUrl('/notifications/unread-count'), {
         headers: {
@@ -32,15 +48,35 @@ const NotificationBell: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.data.unreadCount);
+      } else if (response.status === 401) {
+        console.log('Auth token invalid, user may need to log in again');
+        setUnreadCount(0);
+      } else if (response.status === 404) {
+        console.log('Notifications endpoint not found');
+        setUnreadCount(0);
+      } else {
+        console.warn('Failed to fetch unread count:', response.status, response.statusText);
+        setUnreadCount(0);
       }
     } catch (error) {
-      console.error('Error fetching unread count:', error);
+      // Don't spam console with fetch errors - just silently fail
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.log('Network error fetching notifications (backend may be sleeping)');
+      } else {
+        console.error('Error fetching unread count:', error);
+      }
+      setUnreadCount(0);
     }
   };
 
   const toggleNotificationCenter = () => {
     setIsOpen(!isOpen);
   };
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="relative">
