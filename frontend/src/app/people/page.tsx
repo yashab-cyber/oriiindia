@@ -24,6 +24,11 @@ export default function People() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
 
+  // Helper function to get avatar URL
+  const getAvatarUrl = (avatarId: string) => {
+    return getApiUrl(`/files/avatar/${avatarId}`);
+  };
+
   useEffect(() => {
     fetchPeople();
   }, []);
@@ -226,8 +231,20 @@ export default function People() {
                 <div className="p-6">
                   {/* Avatar and Basic Info */}
                   <div className="flex items-start space-x-4 mb-4">
-                    <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center border border-slate-600">
-                      <UserIcon className="h-8 w-8 text-slate-400" />
+                    <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center border border-slate-600 overflow-hidden">
+                      {person.profile?.avatar ? (
+                        <img
+                          src={getAvatarUrl(person.profile.avatar)}
+                          alt={`${person.firstName} ${person.lastName}`}
+                          className="w-full h-full object-cover rounded-full"
+                          onError={(e) => {
+                            // Fallback to icon if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <UserIcon className={`h-8 w-8 text-slate-400 ${person.profile?.avatar ? 'hidden' : ''}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-slate-100 truncate">

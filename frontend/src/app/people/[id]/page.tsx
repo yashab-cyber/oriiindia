@@ -100,6 +100,10 @@ export default function PersonProfile() {
     });
   };
 
+  const getAvatarUrl = (avatarId: string) => {
+    return getApiUrl(`/files/avatar/${avatarId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900">
@@ -162,8 +166,20 @@ export default function PersonProfile() {
           
           <div className="flex items-start space-x-6">
             {/* Avatar */}
-            <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-600">
-              <UserIcon className="h-16 w-16 text-slate-400" />
+            <div className="w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-600 overflow-hidden">
+              {person.profile?.avatar ? (
+                <img
+                  src={getAvatarUrl(person.profile.avatar)}
+                  alt={`${person.firstName} ${person.lastName}`}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    // Fallback to icon if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <UserIcon className={`h-16 w-16 text-slate-400 ${person.profile?.avatar ? 'hidden' : ''}`} />
             </div>
             
             {/* Basic Info */}

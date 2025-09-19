@@ -114,6 +114,8 @@ const ProfilePage = () => {
 
   const handleAvatarUpdate = async (avatarId: string) => {
     try {
+      console.log('Updating avatar with ID:', avatarId);
+      
       const updatedUser = {
         ...user!,
         profile: {
@@ -123,9 +125,12 @@ const ProfilePage = () => {
       };
       
       setUser(updatedUser);
+      setFormData(updatedUser); // Also update form data
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 3000);
+      
+      console.log('Avatar updated successfully:', updatedUser.profile.avatar);
       
     } catch (error) {
       console.error('Error updating avatar:', error);
@@ -393,8 +398,8 @@ const ProfilePage = () => {
         {activeTab === 'basic' && (
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Profile Image Section */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-6">Profile Photo</h2>
+            <div className="bg-slate-800 border border-slate-700 shadow-lg rounded-lg p-6">
+              <h2 className="text-lg font-medium text-slate-100 mb-6">Profile Photo</h2>
               <ProfileImageUpload
                 currentAvatar={user.profile.avatar}
                 onAvatarUpdate={handleAvatarUpdate}
@@ -402,7 +407,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Basic Information */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-slate-800 border border-slate-700 shadow-lg rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-6">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
