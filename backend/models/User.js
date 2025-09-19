@@ -91,6 +91,30 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // User approval system
+  isApproved: {
+    type: Boolean,
+    default: false
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  approvalDate: {
+    type: Date,
+    default: null
+  },
+  approvalStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  rejectionReason: {
+    type: String,
+    maxlength: [500, 'Rejection reason cannot exceed 500 characters'],
+    default: null
+  },
   lastLogin: {
     type: Date,
     default: null

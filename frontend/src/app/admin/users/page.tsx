@@ -15,6 +15,8 @@ interface User {
   emailVerified: boolean;
   createdAt: string;
   lastLogin?: string;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
 }
 
 interface PaginationInfo {
@@ -27,6 +29,8 @@ interface PaginationInfo {
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -44,6 +48,7 @@ const UserManagement = () => {
   useEffect(() => {
     checkAdminAccess();
     fetchUsers();
+    fetchPendingUsers();
   }, []);
 
   const checkAdminAccess = () => {
@@ -97,6 +102,76 @@ const UserManagement = () => {
   const handleSearch = () => {
     setLoading(true);
     fetchUsers(1);
+  };
+
+  const fetchPendingUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl('/admin/users/pending'), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPendingUsers(data.data.users);
+      } else {
+        console.error('Failed to fetch pending users');
+      }
+    } catch (error) {
+      console.error('Error fetching pending users:', error);
+    }
+  };
+
+  const approveUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl(`/admin/users/${userId}/approve`), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        alert('User approved successfully!');
+        fetchPendingUsers(); // Refresh pending users
+        fetchUsers(); // Refresh all users
+      } else {
+        alert('Failed to approve user');
+      }
+    } catch (error) {
+      console.error('Error approving user:', error);
+      alert('Error approving user');
+    }
+  };
+
+  const rejectUser = async (userId: string, reason: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl(`/admin/users/${userId}/reject`), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason })
+      });
+
+      if (response.ok) {
+        alert('User rejected successfully!');
+        fetchPendingUsers(); // Refresh pending users
+        fetchUsers(); // Refresh all users
+      } else {
+        alert('Failed to reject user');
+      }
+    } catch (error) {
+      console.error('Error rejecting user:', error);
+      alert('Error rejecting user');
+    }
   };
 
   const handlePageChange = (page: number) => {
@@ -200,6 +275,42 @@ const UserManagement = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Tab Navigation */}
+        <div className="bg-white shadow rounded-lg mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                  activeTab === 'all'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                All Users ({users.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('pending')}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${
+                  activeTab === 'pending'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Pending Approval ({pendingUsers.length})
+                {pendingUsers.length > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                    {pendingUsers.length}
+                  </span>
+                )}
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {activeTab === 'all' && (
+          <>
         {/* Search and Filters */}
         <div className="bg-white shadow rounded-lg mb-6 p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -404,6 +515,86 @@ const UserManagement = () => {
             </div>
           )}
         </div>
+        </>
+        )}
+
+        {activeTab === 'pending' && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Pending User Approvals</h3>
+              <p className="text-sm text-gray-500">Review and approve new user registrations</p>
+            </div>
+            
+            {pendingUsers.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <p className="text-gray-500">No pending users for approval</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Registration Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingUsers.map((user) => (
+                      <tr key={user._id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.firstName} {user.lastName}
+                            </div>
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => approveUser(user._id)}
+                            className="text-green-600 hover:text-green-900 bg-green-100 hover:bg-green-200 px-3 py-1 rounded-md transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => {
+                              const reason = prompt('Enter rejection reason (optional):');
+                              if (reason !== null) {
+                                rejectUser(user._id, reason || 'No reason provided');
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+        
       </div>
     </div>
   );

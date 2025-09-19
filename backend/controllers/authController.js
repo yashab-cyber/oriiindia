@@ -26,30 +26,32 @@ export const register = async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user with pending approval status
     const user = new User({
       firstName,
       lastName,
       email,
       password,
-      role
+      role,
+      isApproved: false,
+      approvalStatus: 'pending'
     });
 
     await user.save();
 
-    // Generate token
-    const token = generateToken(user._id);
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
+    // Don't generate token or update login time for unapproved users
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Registration successful! Your account is pending admin approval. You will be notified once approved.',
       data: {
-        user: user.getPublicProfile(),
-        token
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          approvalStatus: user.approvalStatus
+        }
       }
     });
   } catch (error) {
@@ -87,6 +89,22 @@ export const login = async (req, res) => {
         error: {
           message: 'Account is inactive. Please contact administrator.',
           status: 401
+        }
+      });
+    }
+
+    // Check if user is approved
+    if (!user.isApproved || user.approvalStatus !== 'approved') {
+      const statusMessages = {
+        'pending': 'Your account is pending admin approval. Please wait for approval before logging in.',
+        'rejected': `Your account has been rejected. ${user.rejectionReason || 'Please contact administrator for more information.'}`
+      };
+      
+      return res.status(403).json({
+        error: {
+          message: statusMessages[user.approvalStatus] || 'Account not approved. Please contact administrator.',
+          status: 403,
+          approvalStatus: user.approvalStatus
         }
       });
     }

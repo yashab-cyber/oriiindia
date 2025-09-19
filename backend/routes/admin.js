@@ -16,6 +16,7 @@ router.get('/stats', async (req, res) => {
   try {
     // Get various statistics
     const totalUsers = await User.countDocuments();
+    const pendingUsers = await User.countDocuments({ approvalStatus: 'pending' });
     const pendingPapers = await ResearchPaper.countDocuments({ status: 'pending' });
     const totalPapers = await ResearchPaper.countDocuments();
     const upcomingEvents = await Event.countDocuments({ 
@@ -53,6 +54,7 @@ router.get('/stats', async (req, res) => {
       success: true,
       data: {
         totalUsers,
+        pendingUsers,
         pendingPapers,
         totalPapers,
         upcomingEvents,
@@ -526,6 +528,126 @@ router.put('/content/:contentId/moderate', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error moderating content',
+      error: error.message
+    });
+  }
+});
+
+// Get pending users for approval
+router.get('/users/pending', async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const pendingUsers = await User.find({ approvalStatus: 'pending' })
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalPending = await User.countDocuments({ approvalStatus: 'pending' });
+    const totalPages = Math.ceil(totalPending / limitNum);
+
+    res.json({
+      success: true,
+      data: {
+        users: pendingUsers,
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalPending,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching pending users',
+      error: error.message
+    });
+  }
+});
+
+// Approve user
+router.patch('/users/:userId/approve', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const adminId = req.user.id;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        isApproved: true,
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvalDate: new Date()
+      },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User approved successfully',
+      data: { user }
+    });
+  } catch (error) {
+    console.error('Error approving user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error approving user',
+      error: error.message
+    });
+  }
+});
+
+// Reject user
+router.patch('/users/:userId/reject', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user.id;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        isApproved: false,
+        approvalStatus: 'rejected',
+        approvedBy: adminId,
+        approvalDate: new Date(),
+        rejectionReason: reason || 'No reason provided'
+      },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User rejected successfully',
+      data: { user }
+    });
+  } catch (error) {
+    console.error('Error rejecting user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error rejecting user',
       error: error.message
     });
   }

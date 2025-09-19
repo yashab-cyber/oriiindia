@@ -16,8 +16,14 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     role: 'researcher',
+    bio: '',
+    title: '',
+    department: '',
     institution: '',
     researchInterests: '',
+    website: '',
+    linkedIn: '',
+    orcid: '',
     agreeToTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -115,12 +121,34 @@ export default function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+        // Show success message instead of auto-login since approval is required
+        setErrors({
+          submit: data.message || 'Registration successful! Please wait for admin approval before logging in.'
+        });
         
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Clear form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          role: 'visitor',
+          bio: '',
+          title: '',
+          department: '',
+          institution: '',
+          researchInterests: '',
+          website: '',
+          linkedIn: '',
+          orcid: '',
+          agreeToTerms: false
+        });
+        
+        // Optional: Redirect to login page after a delay
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 3000);
       } else {
         setErrors({
           submit: data.error?.message || data.message || 'Registration failed. Please try again.'
