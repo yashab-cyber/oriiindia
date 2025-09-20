@@ -53,9 +53,6 @@ const Footer = () => {
                   className="object-contain"
                 />
               </div>
-              <div>
-                <div className="text-lg font-bold text-slate-100">Open Research Institute of India</div>
-              </div>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed">
               Advancing research and innovation through collaboration and knowledge sharing. 

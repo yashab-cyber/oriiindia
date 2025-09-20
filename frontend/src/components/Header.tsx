@@ -118,9 +118,6 @@ const Header = () => {
                     className="object-contain"
                   />
                 </div>
-                <div className="hidden sm:block text-center">
-                  <div className="text-sm font-bold text-slate-50 leading-tight">Open Research Institute of India</div>
-                </div>
               </div>
             </Link>
           </div>
