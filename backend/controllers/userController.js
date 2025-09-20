@@ -33,8 +33,12 @@ export const getAllUsers = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    // Build query for active users only
-    const query = { isActive: true };
+    // Build query for active and approved users only
+    const query = { 
+      isActive: true,
+      isApproved: true,
+      approvalStatus: 'approved'
+    };
     
     if (role && role !== 'all') {
       query.role = role;
@@ -88,7 +92,7 @@ export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password -__v');
 
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || !user.isApproved || user.approvalStatus !== 'approved') {
       return res.status(404).json({
         error: {
           message: 'User not found',

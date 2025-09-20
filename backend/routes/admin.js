@@ -81,8 +81,11 @@ router.get('/users', async (req, res) => {
     const role = req.query.role || '';
     const status = req.query.status || '';
 
-    // Build query
-    let query = {};
+    // Build query - by default show only approved users for admin dashboard
+    let query = {
+      isApproved: true,
+      approvalStatus: 'approved'
+    };
     
     if (search) {
       query.$or = [
