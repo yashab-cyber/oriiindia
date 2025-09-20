@@ -973,4 +973,249 @@ router.patch('/job-applications/:id/status', async (req, res) => {
   }
 });
 
+// =============================================================================
+// ANALYTICS ROUTES
+// =============================================================================
+
+// Get comprehensive analytics data
+router.get('/analytics', async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const daysAgo = parseInt(days);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysAgo);
+
+    // Overview statistics
+    const [
+      totalUsers,
+      totalPapers,
+      totalJobs,
+      totalEvents,
+      totalApplications,
+      usersThisMonth,
+      papersThisMonth,
+      jobsThisMonth,
+      applicationsThisMonth
+    ] = await Promise.all([
+      User.countDocuments(),
+      ResearchPaper.countDocuments(),
+      Job.countDocuments(),
+      Event.countDocuments(),
+      JobApplication.countDocuments(),
+      User.countDocuments({ createdAt: { $gte: startDate } }),
+      ResearchPaper.countDocuments({ createdAt: { $gte: startDate } }),
+      Job.countDocuments({ createdAt: { $gte: startDate } }),
+      JobApplication.countDocuments({ createdAt: { $gte: startDate } })
+    ]);
+
+    // Calculate growth percentages (simplified calculation)
+    const previousPeriodStart = new Date();
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - (daysAgo * 2));
+    previousPeriodStart.setDate(previousPeriodStart.getDate() + daysAgo);
+
+    const [
+      prevUsers,
+      prevPapers,
+      prevJobs,
+      prevApplications
+    ] = await Promise.all([
+      User.countDocuments({ 
+        createdAt: { 
+          $gte: previousPeriodStart, 
+          $lt: startDate 
+        } 
+      }),
+      ResearchPaper.countDocuments({ 
+        createdAt: { 
+          $gte: previousPeriodStart, 
+          $lt: startDate 
+        } 
+      }),
+      Job.countDocuments({ 
+        createdAt: { 
+          $gte: previousPeriodStart, 
+          $lt: startDate 
+        } 
+      }),
+      JobApplication.countDocuments({ 
+        createdAt: { 
+          $gte: previousPeriodStart, 
+          $lt: startDate 
+        } 
+      })
+    ]);
+
+    // Calculate growth percentages
+    const calculateGrowth = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    // User statistics
+    const usersByRole = await User.aggregate([
+      { $group: { _id: '$role', count: { $sum: 1 } } }
+    ]);
+    
+    const roleStats = {
+      student: 0,
+      faculty: 0,
+      admin: 0,
+      researcher: 0
+    };
+    
+    usersByRole.forEach(role => {
+      if (roleStats.hasOwnProperty(role._id)) {
+        roleStats[role._id] = role.count;
+      }
+    });
+
+    // Paper statistics
+    const papersByStatus = await ResearchPaper.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    
+    const paperStats = {
+      approved: 0,
+      pending: 0,
+      rejected: 0
+    };
+    
+    papersByStatus.forEach(status => {
+      if (paperStats.hasOwnProperty(status._id)) {
+        paperStats[status._id] = status.count;
+      }
+    });
+
+    // Recent paper submissions
+    const recentSubmissions = await ResearchPaper.find()
+      .populate('submittedBy', 'firstName lastName')
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('title status createdAt submittedBy');
+
+    // Job statistics
+    const activeJobs = await Job.countDocuments({ isActive: true });
+    
+    const applicationsByStatus = await JobApplication.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    
+    const appStats = {
+      pending: 0,
+      reviewed: 0,
+      shortlisted: 0,
+      rejected: 0
+    };
+    
+    applicationsByStatus.forEach(status => {
+      if (appStats.hasOwnProperty(status._id)) {
+        appStats[status._id] = status.count;
+      }
+    });
+
+    // Jobs by department
+    const jobsByDepartment = await Job.aggregate([
+      { $group: { _id: '$department', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Top jobs by applications
+    const topJobs = await Job.aggregate([
+      {
+        $lookup: {
+          from: 'jobapplications',
+          localField: '_id',
+          foreignField: 'job',
+          as: 'applications'
+        }
+      },
+      {
+        $project: {
+          title: 1,
+          department: 1,
+          applications: { $size: '$applications' }
+        }
+      },
+      { $sort: { applications: -1 } },
+      { $limit: 5 }
+    ]);
+
+    // Event statistics
+    const upcomingEvents = await Event.countDocuments({ 
+      startDate: { $gte: new Date() } 
+    });
+    const pastEvents = totalEvents - upcomingEvents;
+
+    // Compile analytics data
+    const analyticsData = {
+      overview: {
+        totalUsers,
+        totalPapers,
+        totalJobs,
+        totalEvents,
+        totalApplications,
+        monthlyGrowth: {
+          users: calculateGrowth(usersThisMonth, prevUsers),
+          papers: calculateGrowth(papersThisMonth, prevPapers),
+          jobs: calculateGrowth(jobsThisMonth, prevJobs),
+          applications: calculateGrowth(applicationsThisMonth, prevApplications)
+        }
+      },
+      userStats: {
+        totalUsers,
+        activeUsers: totalUsers, // Simplified - could be based on recent activity
+        newUsersThisMonth: usersThisMonth,
+        usersByRole: roleStats
+      },
+      paperStats: {
+        totalPapers,
+        pendingPapers: paperStats.pending,
+        approvedPapers: paperStats.approved,
+        rejectedPapers: paperStats.rejected,
+        recentSubmissions: recentSubmissions.map(paper => ({
+          title: paper.title,
+          author: `${paper.submittedBy.firstName} ${paper.submittedBy.lastName}`,
+          status: paper.status,
+          submittedAt: paper.createdAt
+        }))
+      },
+      jobStats: {
+        totalJobs,
+        activeJobs,
+        totalApplications,
+        applicationsByStatus: appStats,
+        jobsByDepartment: jobsByDepartment.map(dept => ({
+          department: dept._id,
+          count: dept.count
+        })),
+        topJobs: topJobs.map(job => ({
+          title: job.title,
+          department: job.department,
+          applications: job.applications
+        }))
+      },
+      eventStats: {
+        totalEvents,
+        upcomingEvents,
+        pastEvents,
+        eventsByType: [] // Could be implemented if event types are added
+      }
+    };
+
+    res.json({
+      success: true,
+      data: analyticsData,
+      message: 'Analytics data retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching analytics data',
+      error: error.message
+    });
+  }
+});
+
 export default router;
