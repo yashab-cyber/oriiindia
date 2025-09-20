@@ -15,6 +15,7 @@ const Footer = () => {
     { name: 'Faculty', href: '/people' },
     { name: 'Events', href: '/events' },
     { name: 'Publications', href: '/research' },
+    { name: 'Careers', href: '/careers' },
     { name: 'Contact', href: '/contact' },
   ]
 

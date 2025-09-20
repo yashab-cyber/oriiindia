@@ -15,6 +15,7 @@ import adminRoutes from './routes/admin.js';
 import reportRoutes from './routes/reports.js';
 import notificationRoutes from './routes/notifications.js';
 import collaborationRoutes from './routes/collaborations.js';
+import jobRoutes from './routes/jobs.js';
 
 // Import services
 import EventReminderService from './services/EventReminderService.js';
@@ -76,6 +77,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/collaborations', collaborationRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

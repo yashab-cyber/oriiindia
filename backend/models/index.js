@@ -3,13 +3,17 @@ import ResearchPaper from './ResearchPaper.js';
 import Event from './Event.js';
 import Contact from './Contact.js';
 import Project from './Project.js';
+import Job from './Job.js';
+import JobApplication from './JobApplication.js';
 
 export {
   User,
   ResearchPaper,
   Event,
   Contact,
-  Project
+  Project,
+  Job,
+  JobApplication
 };
 
 export default {
@@ -17,5 +21,7 @@ export default {
   ResearchPaper,
   Event,
   Contact,
-  Project
+  Project,
+  Job,
+  JobApplication
 };

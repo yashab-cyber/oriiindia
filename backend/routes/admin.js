@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import ResearchPaper from '../models/ResearchPaper.js';
 import Event from '../models/Event.js';
 import Report from '../models/Report.js';
+import { Job, JobApplication } from '../models/index.js';
 
 const router = express.Router();
 
@@ -651,6 +652,315 @@ router.patch('/users/:userId/reject', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error rejecting user',
+      error: error.message
+    });
+  }
+});
+
+// =============================================================================
+// JOB MANAGEMENT ROUTES
+// =============================================================================
+
+// Create a new job posting
+router.post('/jobs', async (req, res) => {
+  try {
+    const jobData = {
+      ...req.body,
+      postedBy: req.user.id
+    };
+
+    const job = new Job(jobData);
+    await job.save();
+    
+    await job.populate('postedBy', 'firstName lastName');
+
+    res.status(201).json({
+      success: true,
+      data: { job },
+      message: 'Job posted successfully'
+    });
+  } catch (error) {
+    console.error('Error creating job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating job',
+      error: error.message
+    });
+  }
+});
+
+// Get all jobs (including inactive ones for admin)
+router.get('/jobs', async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = '',
+      status = 'all'
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    let query = {};
+    
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { department: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (status !== 'all') {
+      query.isActive = status === 'active';
+    }
+
+    const [jobs, total] = await Promise.all([
+      Job.find(query)
+        .populate('postedBy', 'firstName lastName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Job.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        jobs,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          totalItems: total,
+          itemsPerPage: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching jobs',
+      error: error.message
+    });
+  }
+});
+
+// Get single job with applications
+router.get('/jobs/:id', async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id)
+      .populate('postedBy', 'firstName lastName');
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    const applications = await JobApplication.find({ job: req.params.id })
+      .sort({ applicationDate: -1 });
+
+    res.json({
+      success: true,
+      data: {
+        job,
+        applications,
+        applicationsCount: applications.length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching job',
+      error: error.message
+    });
+  }
+});
+
+// Update job
+router.put('/jobs/:id', async (req, res) => {
+  try {
+    const job = await Job.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('postedBy', 'firstName lastName');
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { job },
+      message: 'Job updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating job',
+      error: error.message
+    });
+  }
+});
+
+// Delete job
+router.delete('/jobs/:id', async (req, res) => {
+  try {
+    const job = await Job.findByIdAndDelete(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    // Also delete all applications for this job
+    await JobApplication.deleteMany({ job: req.params.id });
+
+    res.json({
+      success: true,
+      message: 'Job and all applications deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting job',
+      error: error.message
+    });
+  }
+});
+
+// Get all job applications
+router.get('/job-applications', async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      jobId,
+      status = 'all'
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    let query = {};
+    
+    if (jobId) {
+      query.job = jobId;
+    }
+
+    if (status !== 'all') {
+      query.status = status;
+    }
+
+    const [applications, total] = await Promise.all([
+      JobApplication.find(query)
+        .populate('job', 'title department')
+        .sort({ applicationDate: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      JobApplication.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        applications,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          totalItems: total,
+          itemsPerPage: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching applications:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching applications',
+      error: error.message
+    });
+  }
+});
+
+// Get single application details
+router.get('/job-applications/:id', async (req, res) => {
+  try {
+    const application = await JobApplication.findById(req.params.id)
+      .populate('job', 'title department location type')
+      .populate('reviewNotes.reviewedBy', 'firstName lastName');
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { application }
+    });
+  } catch (error) {
+    console.error('Error fetching application:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching application',
+      error: error.message
+    });
+  }
+});
+
+// Update application status
+router.patch('/job-applications/:id/status', async (req, res) => {
+  try {
+    const { status, note } = req.body;
+
+    const updateData = { status };
+    
+    if (note) {
+      updateData.$push = {
+        reviewNotes: {
+          note,
+          reviewedBy: req.user.id,
+          reviewDate: new Date()
+        }
+      };
+    }
+
+    const application = await JobApplication.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    ).populate('job', 'title department');
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { application },
+      message: 'Application status updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating application status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating application status',
       error: error.message
     });
   }
