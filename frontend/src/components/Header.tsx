@@ -118,7 +118,7 @@ const Header = () => {
               <div className="flex flex-col items-center space-y-1">
                 <div className="flex h-14 w-14 items-center justify-center">
                   <Image
-                    src="/images/logos/orii_logo.svg"
+                    src="/images/logos/ORII.png"
                     alt="ORII Logo"
                     width={56}
                     height={56}
