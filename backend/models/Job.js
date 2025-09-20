@@ -60,7 +60,13 @@ const jobSchema = new mongoose.Schema({
   },
   applicationDeadline: {
     type: Date,
-    required: true
+    required: false,
+    default: function() {
+      // Default to 30 days from now if not specified
+      const date = new Date();
+      date.setDate(date.getDate() + 30);
+      return date;
+    }
   },
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,

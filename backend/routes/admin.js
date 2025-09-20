@@ -669,6 +669,13 @@ router.post('/jobs', async (req, res) => {
       postedBy: req.user.id
     };
 
+    // If no application deadline provided, set it to 30 days from now
+    if (!jobData.applicationDeadline) {
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + 30);
+      jobData.applicationDeadline = deadline;
+    }
+
     const job = new Job(jobData);
     await job.save();
     
