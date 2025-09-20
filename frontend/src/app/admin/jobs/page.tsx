@@ -189,6 +189,58 @@ const JobManagement = () => {
     return 'Not specified';
   };
 
+  const handleCreateJob = async (jobData: any) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl('/admin/jobs'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jobData)
+      });
+
+      if (response.ok) {
+        alert('Job created successfully!');
+        setShowCreateModal(false);
+        fetchJobs(1);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create job: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error creating job:', error);
+      alert('Error creating job');
+    }
+  };
+
+  const handleUpdateJob = async (jobId: string, jobData: any) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl(`/admin/jobs/${jobId}`), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jobData)
+      });
+
+      if (response.ok) {
+        alert('Job updated successfully!');
+        setEditingJob(null);
+        fetchJobs(pagination.currentPage);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update job: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating job:', error);
+      alert('Error updating job');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -386,6 +438,376 @@ const JobManagement = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Job Creation/Edit Modal */}
+        {(showCreateModal || editingJob) && (
+          <JobModal
+            job={editingJob}
+            isOpen={showCreateModal || !!editingJob}
+            onClose={() => {
+              setShowCreateModal(false);
+              setEditingJob(null);
+            }}
+            onSave={(jobData) => {
+              if (editingJob) {
+                handleUpdateJob(editingJob._id, jobData);
+              } else {
+                handleCreateJob(jobData);
+              }
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Job Modal Component
+const JobModal = ({ job, isOpen, onClose, onSave }: {
+  job: Job | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: any) => void;
+}) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    department: '',
+    location: '',
+    type: 'full-time',
+    experience: 'entry-level',
+    description: '',
+    requirements: [''],
+    responsibilities: [''],
+    skills: [''],
+    salary: {
+      min: '',
+      max: '',
+      currency: 'USD',
+      negotiable: false
+    },
+    applicationDeadline: ''
+  });
+
+  useEffect(() => {
+    if (job) {
+      setFormData({
+        title: job.title,
+        department: job.department,
+        location: job.location,
+        type: job.type,
+        experience: job.experience,
+        description: job.description,
+        requirements: job.requirements.length ? job.requirements : [''],
+        responsibilities: job.responsibilities.length ? job.responsibilities : [''],
+        skills: job.skills.length ? job.skills : [''],
+        salary: {
+          min: job.salary.min?.toString() || '',
+          max: job.salary.max?.toString() || '',
+          currency: job.salary.currency,
+          negotiable: job.salary.negotiable
+        },
+        applicationDeadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : ''
+      });
+    } else {
+      // Reset form for new job
+      setFormData({
+        title: '',
+        department: '',
+        location: '',
+        type: 'full-time',
+        experience: 'entry-level',
+        description: '',
+        requirements: [''],
+        responsibilities: [''],
+        skills: [''],
+        salary: {
+          min: '',
+          max: '',
+          currency: 'USD',
+          negotiable: false
+        },
+        applicationDeadline: ''
+      });
+    }
+  }, [job]);
+
+  const handleArrayChange = (field: 'requirements' | 'responsibilities' | 'skills', index: number, value: string) => {
+    const newArray = [...formData[field]];
+    newArray[index] = value;
+    setFormData(prev => ({ ...prev, [field]: newArray }));
+  };
+
+  const addArrayItem = (field: 'requirements' | 'responsibilities' | 'skills') => {
+    setFormData(prev => ({ ...prev, [field]: [...prev[field], ''] }));
+  };
+
+  const removeArrayItem = (field: 'requirements' | 'responsibilities' | 'skills', index: number) => {
+    const newArray = formData[field].filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, [field]: newArray.length ? newArray : [''] }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const jobData = {
+      ...formData,
+      requirements: formData.requirements.filter(r => r.trim()),
+      responsibilities: formData.responsibilities.filter(r => r.trim()),
+      skills: formData.skills.filter(s => s.trim()),
+      salary: {
+        ...formData.salary,
+        min: formData.salary.min ? parseInt(formData.salary.min) : undefined,
+        max: formData.salary.max ? parseInt(formData.salary.max) : undefined
+      }
+    };
+
+    onSave(jobData);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {job ? 'Edit Job' : 'Create New Job'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Job Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.department}
+                  onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Job Type *
+                </label>
+                <select
+                  required
+                  value={formData.type}
+                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                  <option value="freelance">Freelance</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Experience Level *
+                </label>
+                <select
+                  required
+                  value={formData.experience}
+                  onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="entry-level">Entry Level</option>
+                  <option value="mid-level">Mid Level</option>
+                  <option value="senior-level">Senior Level</option>
+                  <option value="executive">Executive</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Application Deadline
+                </label>
+                <input
+                  type="date"
+                  value={formData.applicationDeadline}
+                  onChange={(e) => setFormData(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Job Description *
+              </label>
+              <textarea
+                required
+                rows={4}
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Salary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Min Salary
+                </label>
+                <input
+                  type="number"
+                  value={formData.salary.min}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    salary: { ...prev.salary, min: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Salary
+                </label>
+                <input
+                  type="number"
+                  value={formData.salary.max}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    salary: { ...prev.salary, max: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Currency
+                </label>
+                <select
+                  value={formData.salary.currency}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    salary: { ...prev.salary, currency: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="INR">INR</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="negotiable"
+                checked={formData.salary.negotiable}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  salary: { ...prev.salary, negotiable: e.target.checked }
+                }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="negotiable" className="ml-2 block text-sm text-gray-900">
+                Salary is negotiable
+              </label>
+            </div>
+
+            {/* Dynamic Arrays */}
+            {(['requirements', 'responsibilities', 'skills'] as const).map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                  {field} *
+                </label>
+                {formData[field].map((item, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={item}
+                      onChange={(e) => handleArrayChange(field, index, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder={`Enter ${field.slice(0, -1)}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem(field, index)}
+                      className="px-3 py-2 text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addArrayItem(field)}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  + Add {field.slice(0, -1)}
+                </button>
+              </div>
+            ))}
+
+            {/* Form Actions */}
+            <div className="flex justify-end gap-4 pt-6 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                {job ? 'Update Job' : 'Create Job'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

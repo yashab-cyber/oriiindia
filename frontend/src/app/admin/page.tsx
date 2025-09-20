@@ -282,6 +282,47 @@ const AdminDashboard = () => {
             </div>
           </Link>
 
+          <Link href="/admin/jobs" className="group">
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors">
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2L3 7v11a2 2 0 002 2h10a2 2 0 002-2V7l-7-5z" />
+                        <path d="M8 6a2 2 0 114 0v1h3a1 1 0 110 2v7a1 1 0 11-2 0V9H7v7a1 1 0 11-2 0V9a1 1 0 110-2h3V6z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-lg font-medium text-gray-900 group-hover:text-orange-600">Job Management</h3>
+                    <p className="text-sm text-gray-500">Create and manage job postings</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/admin/applications" className="group">
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center group-hover:bg-teal-600 transition-colors">
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 0a1 1 0 100 2h.01a1 1 0 100-2H9zm2 0a1 1 0 100 2h.01a1 1 0 100-2H11z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-lg font-medium text-gray-900 group-hover:text-teal-600">Job Applications</h3>
+                    <p className="text-sm text-gray-500">Review and manage job applications</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
           <Link href="/admin/settings" className="group">
             <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
               <div className="p-6">
