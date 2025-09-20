@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "axios": "^1.12.2"
+  },
+  "name": "oriiindia",
+  "description": "A comprehensive web application for the Open Research Institute of India, facilitating research collaboration, publication management, and institutional networking.",
+  "version": "1.0.0",
+  "main": "create_admin.js",
+  "type": "module",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

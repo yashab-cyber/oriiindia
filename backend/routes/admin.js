@@ -218,6 +218,76 @@ router.patch('/users/:userId/role', async (req, res) => {
   }
 });
 
+// Toggle user employee status
+router.patch('/users/:userId/employee', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { 
+      isEmployee, 
+      position, 
+      employeeDepartment, 
+      phoneNumber, 
+      dateOfJoining, 
+      salary,
+      workingHours 
+    } = req.body;
+
+    const updateData = { isEmployee };
+
+    if (isEmployee) {
+      // If making user an employee, set employee details
+      updateData.employeeDetails = {
+        position: position || '',
+        employeeDepartment: employeeDepartment || '',
+        phoneNumber: phoneNumber || '',
+        dateOfJoining: dateOfJoining || new Date(),
+        salary: salary || 0,
+        employmentStatus: 'active',
+        workingHours: workingHours || { daily: 8, weekly: 40 }
+      };
+    } else {
+      // If removing employee status, clear employee details
+      updateData.$unset = { 
+        'employeeDetails.employeeId': 1,
+        'employeeDetails.position': 1,
+        'employeeDetails.employeeDepartment': 1,
+        'employeeDetails.phoneNumber': 1,
+        'employeeDetails.dateOfJoining': 1,
+        'employeeDetails.salary': 1,
+        'employeeDetails.workingHours': 1,
+        'employeeDetails.employmentStatus': 1
+      };
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `User ${isEmployee ? 'added as' : 'removed from'} employee successfully`,
+      data: { user }
+    });
+
+  } catch (error) {
+    console.error('Error updating user employee status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+});
+
 // Get research papers for review
 router.get('/papers', async (req, res) => {
   try {
@@ -1285,12 +1355,12 @@ router.get('/employees', async (req, res) => {
 // Create new employee
 router.post('/employees', async (req, res) => {
   try {
-    const bcrypt = (await import('bcryptjs')).default;
     const Employee = (await import('../models/Employee.js')).default;
 
     const {
       name,
       email,
+      password,
       department,
       position,
       phoneNumber,
@@ -1311,15 +1381,20 @@ router.post('/employees', async (req, res) => {
       });
     }
 
-    // Generate temporary password
-    const tempPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(tempPassword, 12);
+    // Use provided password or generate temporary password
+    let employeePassword = password;
+    let tempPassword = null;
+    
+    if (!password) {
+      tempPassword = Math.random().toString(36).slice(-8);
+      employeePassword = tempPassword;
+    }
 
-    // Create employee
+    // Create employee (password will be hashed by pre-save middleware)
     const employee = new Employee({
       name,
       email: email.toLowerCase(),
-      password: hashedPassword,
+      password: employeePassword,
       department,
       position,
       phoneNumber,
@@ -1336,15 +1411,20 @@ router.post('/employees', async (req, res) => {
 
     // Don't return password in response
     const employeeResponse = employee.toJSON();
-    delete employeeResponse.password;
+
+    const responseData = {
+      employee: employeeResponse
+    };
+
+    // Include temp password in response only if one was generated
+    if (tempPassword) {
+      responseData.tempPassword = tempPassword; // In production, send this via email
+    }
 
     res.status(201).json({
       success: true,
       message: 'Employee created successfully',
-      data: {
-        employee: employeeResponse,
-        tempPassword // In production, send this via email
-      }
+      data: responseData
     });
 
   } catch (error) {

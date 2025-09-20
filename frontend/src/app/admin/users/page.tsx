@@ -17,6 +17,20 @@ interface User {
   lastLogin?: string;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   rejectionReason?: string;
+  isEmployee?: boolean;
+  employeeDetails?: {
+    employeeId?: string;
+    position?: string;
+    employeeDepartment?: string;
+    phoneNumber?: string;
+    dateOfJoining?: string;
+    employmentStatus?: string;
+    workingHours?: {
+      daily: number;
+      weekly: number;
+    };
+    salary?: number;
+  };
 }
 
 interface PaginationInfo {
@@ -35,6 +49,16 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [employeeForm, setEmployeeForm] = useState({
+    position: '',
+    employeeDepartment: '',
+    phoneNumber: '',
+    dateOfJoining: '',
+    salary: '',
+    workingHours: { daily: 8, weekly: 40 }
+  });
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 1,
@@ -122,6 +146,75 @@ const UserManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching pending users:', error);
+    }
+  };
+
+  const departments = [
+    'Human Resources',
+    'Information Technology',
+    'Finance',
+    'Marketing',
+    'Research & Development',
+    'Operations',
+    'Administration',
+    'Legal',
+    'Customer Support',
+    'Sales'
+  ];
+
+  const openEmployeeModal = (user: User) => {
+    setSelectedUser(user);
+    if (user.isEmployee && user.employeeDetails) {
+      setEmployeeForm({
+        position: user.employeeDetails.position || '',
+        employeeDepartment: user.employeeDetails.employeeDepartment || '',
+        phoneNumber: user.employeeDetails.phoneNumber || '',
+        dateOfJoining: user.employeeDetails.dateOfJoining?.split('T')[0] || '',
+        salary: user.employeeDetails.salary?.toString() || '',
+        workingHours: user.employeeDetails.workingHours || { daily: 8, weekly: 40 }
+      });
+    } else {
+      setEmployeeForm({
+        position: '',
+        employeeDepartment: '',
+        phoneNumber: '',
+        dateOfJoining: '',
+        salary: '',
+        workingHours: { daily: 8, weekly: 40 }
+      });
+    }
+    setShowEmployeeModal(true);
+  };
+
+  const handleEmployeeToggle = async (makeEmployee: boolean) => {
+    if (!selectedUser) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl(`/admin/users/${selectedUser._id}/employee`), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isEmployee: makeEmployee,
+          ...(makeEmployee && employeeForm)
+        })
+      });
+
+      if (response.ok) {
+        setShowEmployeeModal(false);
+        setSelectedUser(null);
+        fetchUsers(pagination.currentPage);
+        alert(`User ${makeEmployee ? 'added as employee' : 'removed from employee role'} successfully!`);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to update employee status');
+      }
+    } catch (error) {
+      console.error('Error updating employee status:', error);
+      alert('Failed to update employee status');
     }
   };
 
@@ -458,6 +551,16 @@ const UserManagement = () => {
                         >
                           {user.isActive ? 'Deactivate' : 'Activate'}
                         </button>
+                        <button
+                          onClick={() => openEmployeeModal(user)}
+                          className={`px-3 py-1 rounded text-xs font-medium ${
+                            user.isEmployee 
+                              ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          }`}
+                        >
+                          {user.isEmployee ? 'Employee ✓' : 'Make Employee'}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -595,6 +698,195 @@ const UserManagement = () => {
           </div>
         )}
         
+        {/* Employee Management Modal */}
+        {showEmployeeModal && selectedUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {selectedUser.isEmployee ? 'Edit Employee Details' : 'Make User Employee'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowEmployeeModal(false);
+                    setSelectedUser(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>User:</strong> {selectedUser.firstName} {selectedUser.lastName} ({selectedUser.email})
+                </p>
+                {selectedUser.isEmployee && selectedUser.employeeDetails?.employeeId && (
+                  <p className="text-sm text-blue-800">
+                    <strong>Employee ID:</strong> {selectedUser.employeeDetails.employeeId}
+                  </p>
+                )}
+              </div>
+
+              {selectedUser.isEmployee ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                    <input
+                      type="text"
+                      value={employeeForm.position}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, position: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <select
+                      value={employeeForm.employeeDepartment}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, employeeDepartment: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={employeeForm.phoneNumber}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date of Joining</label>
+                    <input
+                      type="date"
+                      value={employeeForm.dateOfJoining}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, dateOfJoining: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
+                    <input
+                      type="number"
+                      value={employeeForm.salary}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, salary: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex space-x-2 pt-4">
+                    <button
+                      onClick={() => handleEmployeeToggle(false)}
+                      className="flex-1 px-4 py-2 text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors"
+                    >
+                      Remove Employee Role
+                    </button>
+                    <button
+                      onClick={() => handleEmployeeToggle(true)}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Update Employee
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-gray-600 mb-4">
+                    Fill in the employee details to give this user employee access to the system.
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Position *</label>
+                    <input
+                      type="text"
+                      required
+                      value={employeeForm.position}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, position: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                    <select
+                      required
+                      value={employeeForm.employeeDepartment}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, employeeDepartment: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={employeeForm.phoneNumber}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date of Joining</label>
+                    <input
+                      type="date"
+                      value={employeeForm.dateOfJoining}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, dateOfJoining: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
+                    <input
+                      type="number"
+                      value={employeeForm.salary}
+                      onChange={(e) => setEmployeeForm(prev => ({ ...prev, salary: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex space-x-2 pt-4">
+                    <button
+                      onClick={() => {
+                        setShowEmployeeModal(false);
+                        setSelectedUser(null);
+                      }}
+                      className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleEmployeeToggle(true)}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Make Employee
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

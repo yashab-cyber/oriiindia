@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const employeeSchema = new mongoose.Schema({
   employeeId: {
@@ -119,18 +120,31 @@ employeeSchema.index({ email: 1 });
 employeeSchema.index({ department: 1 });
 employeeSchema.index({ employmentStatus: 1 });
 
-// Pre-save middleware to generate employee ID if not provided
+// Pre-save middleware to generate employee ID and hash password
 employeeSchema.pre('save', async function(next) {
+  // Generate employee ID if not provided
   if (!this.employeeId) {
     const count = await mongoose.model('Employee').countDocuments();
     this.employeeId = `EMP${String(count + 1).padStart(4, '0')}`;
   }
+  
+  // Hash password if it's modified
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  
   next();
 });
 
 // Method to get full name
 employeeSchema.methods.getFullName = function() {
   return this.name;
+};
+
+// Method to compare passwords
+employeeSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Method to check if employee is active

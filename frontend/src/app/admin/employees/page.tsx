@@ -47,6 +47,7 @@ const AdminEmployeeManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     department: '',
     position: '',
     phoneNumber: '',
@@ -172,6 +173,7 @@ const AdminEmployeeManagement = () => {
         setFormData({
           name: '',
           email: '',
+          password: '',
           department: '',
           position: '',
           phoneNumber: '',
@@ -195,6 +197,7 @@ const AdminEmployeeManagement = () => {
     setFormData({
       name: employee.name,
       email: employee.email,
+      password: '', // Don't pre-fill password for security
       department: employee.department,
       position: employee.position,
       phoneNumber: employee.phoneNumber || '',
@@ -211,6 +214,7 @@ const AdminEmployeeManagement = () => {
     setFormData({
       name: '',
       email: '',
+      password: '',
       department: '',
       position: '',
       phoneNumber: '',
@@ -495,6 +499,20 @@ const AdminEmployeeManagement = () => {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password {!editingEmployee && '*'}
+                  </label>
+                  <input
+                    type="password"
+                    required={!editingEmployee}
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder={editingEmployee ? "Leave blank to keep current password" : "Enter password"}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

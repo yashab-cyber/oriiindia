@@ -1,5 +1,6 @@
 import express from 'express';
 import Employee from '../models/Employee.js';
+import User from '../models/User.js';
 import Attendance from '../models/Attendance.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -21,9 +22,39 @@ router.post('/checkin', authenticate, async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    let employeeId;
+    let employee;
+
+    if (req.user.isUserEmployee) {
+      // User-employee: use user ID and get user details
+      employeeId = req.user.userId;
+      const user = await User.findById(req.user.userId);
+      if (!user || !user.isEmployee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee profile not found'
+        });
+      }
+      // Transform user data to match employee format for consistency
+      employee = {
+        workingHours: { start: '09:00' }, // Default working hours
+        ...user.employeeDetails
+      };
+    } else {
+      // Regular employee: use employee ID
+      employeeId = req.user.employeeId;
+      employee = await Employee.findById(req.user.employeeId);
+      if (!employee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee not found'
+        });
+      }
+    }
+
     // Check if already checked in today
     const existingAttendance = await Attendance.findOne({
-      employee: req.user.employeeId,
+      employee: employeeId,
       date: today
     });
 
@@ -34,20 +65,11 @@ router.post('/checkin', authenticate, async (req, res) => {
       });
     }
 
-    // Get employee details for late calculation
-    const employee = await Employee.findById(req.user.employeeId);
-    if (!employee) {
-      return res.status(404).json({
-        success: false,
-        message: 'Employee not found'
-      });
-    }
-
     const checkInTime = new Date();
     
     // Create attendance record
     const attendance = new Attendance({
-      employee: req.user.employeeId,
+      employee: employeeId,
       date: today,
       checkInTime,
       location: {
@@ -107,9 +129,33 @@ router.post('/checkout', authenticate, async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    let employeeId;
+    let employee;
+
+    if (req.user.isUserEmployee) {
+      // User-employee: use user ID and get user details
+      employeeId = req.user.userId;
+      const user = await User.findById(req.user.userId);
+      if (!user || !user.isEmployee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee profile not found'
+        });
+      }
+      // Transform user data to match employee format for consistency
+      employee = {
+        workingHours: { end: '17:00' }, // Default working hours
+        ...user.employeeDetails
+      };
+    } else {
+      // Regular employee: use employee ID
+      employeeId = req.user.employeeId;
+      employee = await Employee.findById(req.user.employeeId);
+    }
+
     // Find today's attendance record
     const attendance = await Attendance.findOne({
-      employee: req.user.employeeId,
+      employee: employeeId,
       date: today
     });
 
@@ -143,8 +189,7 @@ router.post('/checkout', authenticate, async (req, res) => {
         : `Checkout: ${notes}`;
     }
 
-    // Get employee details for early departure calculation
-    const employee = await Employee.findById(req.user.employeeId);
+    // Get standard end time for early departure calculation
     const standardEndTime = employee?.workingHours?.end || '17:00';
     
     // Check if early departure
@@ -185,8 +230,10 @@ router.get('/today', authenticate, async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const employeeId = req.user.isUserEmployee ? req.user.userId : req.user.employeeId;
+
     const attendance = await Attendance.findOne({
-      employee: req.user.employeeId,
+      employee: employeeId,
       date: today
     });
 
@@ -231,8 +278,10 @@ router.get('/history', authenticate, async (req, res) => {
       };
     }
 
+    const employeeId = req.user.isUserEmployee ? req.user.userId : req.user.employeeId;
+
     const query = {
-      employee: req.user.employeeId,
+      employee: employeeId,
       ...dateFilter
     };
 
@@ -290,8 +339,10 @@ router.get('/summary', authenticate, async (req, res) => {
       end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     }
 
+    const employeeId = req.user.isUserEmployee ? req.user.userId : req.user.employeeId;
+
     const summary = await Attendance.getAttendanceSummary(
-      req.user.employeeId,
+      employeeId,
       start,
       end
     );
@@ -336,9 +387,11 @@ router.post('/regularize', authenticate, async (req, res) => {
       });
     }
 
+    const employeeId = req.user.isUserEmployee ? req.user.userId : req.user.employeeId;
+
     const attendance = await Attendance.findOne({
       _id: attendanceId,
-      employee: req.user.employeeId
+      employee: employeeId
     });
 
     if (!attendance) {

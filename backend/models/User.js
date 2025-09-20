@@ -118,6 +118,71 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: null
+  },
+  // Employee role system
+  isEmployee: {
+    type: Boolean,
+    default: false
+  },
+  employeeDetails: {
+    employeeId: {
+      type: String,
+      unique: true,
+      sparse: true, // Only enforce uniqueness if value exists
+      trim: true
+    },
+    position: {
+      type: String,
+      trim: true
+    },
+    employeeDepartment: {
+      type: String,
+      enum: [
+        'Human Resources',
+        'Information Technology',
+        'Finance',
+        'Marketing',
+        'Research & Development',
+        'Operations',
+        'Administration',
+        'Legal',
+        'Customer Support',
+        'Sales'
+      ]
+    },
+    phoneNumber: {
+      type: String,
+      trim: true
+    },
+    dateOfJoining: {
+      type: Date
+    },
+    employmentStatus: {
+      type: String,
+      enum: ['active', 'inactive', 'terminated', 'on-leave'],
+      default: 'active'
+    },
+    workingHours: {
+      daily: {
+        type: Number,
+        default: 8
+      },
+      weekly: {
+        type: Number,
+        default: 40
+      }
+    },
+    salary: {
+      type: Number,
+      min: 0
+    },
+    manager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    lastLoginAsEmployee: {
+      type: Date
+    }
   }
 }, {
   timestamps: true,
@@ -139,15 +204,32 @@ userSchema.index({
   'profile.researchInterests': 'text'
 });
 
-// Pre-save middleware to hash password
+// Pre-save middleware to hash password and generate employee ID
 userSchema.pre('save', async function(next) {
-  // Only hash password if it has been modified (or is new)
-  if (!this.isModified('password')) return next();
-
   try {
-    // Hash password with cost of 12
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
+    // Only hash password if it has been modified (or is new)
+    if (this.isModified('password')) {
+      const salt = await bcrypt.genSalt(12);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
+
+    // Generate employee ID if user becomes an employee and doesn't have one
+    if (this.isEmployee && (!this.employeeDetails.employeeId || this.isModified('isEmployee'))) {
+      if (!this.employeeDetails.employeeId) {
+        // Find the highest employee ID from both User and Employee collections
+        const Employee = mongoose.model('Employee');
+        
+        // Get counts from both collections to generate unique ID
+        const [userEmployeeCount, employeeCount] = await Promise.all([
+          mongoose.model('User').countDocuments({ 'employeeDetails.employeeId': { $exists: true } }),
+          Employee.countDocuments()
+        ]);
+        
+        const totalCount = userEmployeeCount + employeeCount;
+        this.employeeDetails.employeeId = `EMP${String(totalCount + 1).padStart(4, '0')}`;
+      }
+    }
+
     next();
   } catch (error) {
     next(error);

@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Employee from '../models/Employee.js';
+import User from '../models/User.js';
 import Attendance from '../models/Attendance.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -12,14 +13,31 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password, employeeId } = req.body;
 
-    // Find employee by email or employeeId
+    let employeeRecord = null;
+    let isUserEmployee = false;
+
+    // First, try to find in Employee collection
     const query = email 
       ? { email: email.toLowerCase() }
       : { employeeId };
 
-    const employee = await Employee.findOne(query);
+    employeeRecord = await Employee.findOne(query);
     
-    if (!employee) {
+    // If not found in Employee collection, check Users with employee role
+    if (!employeeRecord && email) {
+      const User = (await import('../models/User.js')).default;
+      const userRecord = await User.findOne({ 
+        email: email.toLowerCase(), 
+        isEmployee: true 
+      }).select('+password'); // Include password for verification
+
+      if (userRecord) {
+        employeeRecord = userRecord;
+        isUserEmployee = true;
+      }
+    }
+
+    if (!employeeRecord) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -27,15 +45,34 @@ router.post('/login', async (req, res) => {
     }
 
     // Check if employee is active
-    if (!employee.isActive()) {
-      return res.status(401).json({
-        success: false,
-        message: 'Employee account is not active'
-      });
+    if (isUserEmployee) {
+      // For user-employees, check user isActive and employee status
+      if (!employeeRecord.isActive || employeeRecord.employeeDetails?.employmentStatus !== 'active') {
+        return res.status(401).json({
+          success: false,
+          message: 'Employee account is not active'
+        });
+      }
+    } else {
+      // For dedicated employees, use existing method
+      if (!employeeRecord.isActive()) {
+        return res.status(401).json({
+          success: false,
+          message: 'Employee account is not active'
+        });
+      }
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, employee.password);
+    let isPasswordValid;
+    if (isUserEmployee) {
+      // For user-employees, compare directly with bcrypt
+      isPasswordValid = await bcrypt.compare(password, employeeRecord.password);
+    } else {
+      // For dedicated employees, use the model method
+      isPasswordValid = await employeeRecord.comparePassword(password);
+    }
+
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -44,35 +81,48 @@ router.post('/login', async (req, res) => {
     }
 
     // Update last login
-    employee.lastLoginAt = new Date();
-    await employee.save();
+    if (isUserEmployee) {
+      employeeRecord.lastLogin = new Date();
+      if (employeeRecord.employeeDetails) {
+        employeeRecord.employeeDetails.lastLoginAsEmployee = new Date();
+      }
+      await employeeRecord.save();
+    } else {
+      employeeRecord.lastLoginAt = new Date();
+      await employeeRecord.save();
+    }
 
     // Generate JWT token
     const token = jwt.sign(
       { 
-        employeeId: employee._id,
+        employeeId: employeeRecord._id,
         type: 'employee',
-        empId: employee.employeeId 
+        empId: isUserEmployee ? employeeRecord.employeeDetails?.employeeId : employeeRecord.employeeId,
+        isUserEmployee: isUserEmployee
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
+    // Prepare response data
+    const responseData = {
+      token,
+      employee: {
+        id: employeeRecord._id,
+        employeeId: isUserEmployee ? employeeRecord.employeeDetails?.employeeId : employeeRecord.employeeId,
+        name: isUserEmployee ? `${employeeRecord.firstName} ${employeeRecord.lastName}` : employeeRecord.name,
+        email: employeeRecord.email,
+        department: isUserEmployee ? employeeRecord.employeeDetails?.employeeDepartment : employeeRecord.department,
+        position: isUserEmployee ? employeeRecord.employeeDetails?.position : employeeRecord.position,
+        isFirstLogin: isUserEmployee ? false : employeeRecord.isFirstLogin,
+        isUserEmployee: isUserEmployee
+      }
+    };
+
     res.json({
       success: true,
       message: 'Login successful',
-      data: {
-        token,
-        employee: {
-          id: employee._id,
-          employeeId: employee.employeeId,
-          name: employee.name,
-          email: employee.email,
-          department: employee.department,
-          position: employee.position,
-          isFirstLogin: employee.isFirstLogin
-        }
-      }
+      data: responseData
     });
 
   } catch (error) {
@@ -252,12 +302,45 @@ router.get('/dashboard', authenticate, async (req, res) => {
       });
     }
 
-    const employee = await Employee.findById(req.user.employeeId).select('-password');
-    if (!employee) {
-      return res.status(404).json({
-        success: false,
-        message: 'Employee not found'
-      });
+    let employee;
+    let employeeId;
+
+    if (req.user.isUserEmployee) {
+      // User-employee: get from User collection
+      const user = await User.findById(req.user.userId).select('-password');
+      if (!user || !user.isEmployee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee profile not found'
+        });
+      }
+      
+      // Transform user data to match employee format
+      employee = {
+        _id: user._id,
+        employeeId: user.employeeDetails.employeeId,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        position: user.employeeDetails.position,
+        department: user.employeeDetails.department,
+        salary: user.employeeDetails.salary,
+        dateOfJoining: user.employeeDetails.dateOfJoining,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      };
+      employeeId = user._id; // Use user ID for attendance lookup
+    } else {
+      // Regular employee: get from Employee collection
+      employee = await Employee.findById(req.user.employeeId).select('-password');
+      if (!employee) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee not found'
+        });
+      }
+      employeeId = req.user.employeeId;
     }
 
     // Get today's attendance
@@ -265,7 +348,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
     today.setHours(0, 0, 0, 0);
     
     const todayAttendance = await Attendance.findOne({
-      employee: req.user.employeeId,
+      employee: employeeId,
       date: today
     });
 
@@ -274,7 +357,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     
     const monthlyAttendance = await Attendance.getAttendanceSummary(
-      req.user.employeeId,
+      employeeId,
       startOfMonth,
       endOfMonth
     );
@@ -284,7 +367,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     const recentAttendance = await Attendance.find({
-      employee: req.user.employeeId,
+      employee: employeeId,
       date: { $gte: sevenDaysAgo }
     }).sort({ date: -1 }).limit(7);
 
@@ -303,6 +386,89 @@ router.get('/dashboard', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch dashboard data',
+      error: error.message
+    });
+  }
+});
+
+// Change employee password
+router.post('/change-password', authenticate, async (req, res) => {
+  try {
+    // Check if user is an employee
+    if (req.user.type !== 'employee') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Employee login required.'
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long'
+      });
+    }
+
+    let user;
+    let isCurrentPasswordValid = false;
+
+    if (req.user.isUserEmployee) {
+      // User-employee: check User collection
+      user = await User.findById(req.user.userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    } else {
+      // Regular employee: check Employee collection
+      user = await Employee.findById(req.user.employeeId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'Employee not found'
+        });
+      }
+      isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    }
+
+    // Verify current password
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password (will be hashed by pre-save middleware)
+    user.password = newPassword;
+    if (!req.user.isUserEmployee) {
+      user.isFirstLogin = false; // Mark as not first login after password change for Employee records
+    }
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to change password',
       error: error.message
     });
   }
