@@ -96,6 +96,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { 
         employeeId: employeeRecord._id,
+        userId: isUserEmployee ? employeeRecord._id : null,
         type: 'employee',
         empId: isUserEmployee ? employeeRecord.employeeDetails?.employeeId : employeeRecord.employeeId,
         isUserEmployee: isUserEmployee
@@ -220,73 +221,6 @@ router.put('/profile', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update profile',
-      error: error.message
-    });
-  }
-});
-
-// Change password
-router.put('/change-password', authenticate, async (req, res) => {
-  try {
-    if (req.user.type !== 'employee') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Employee login required.'
-      });
-    }
-
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password and new password are required'
-      });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 6 characters long'
-      });
-    }
-
-    const employee = await Employee.findById(req.user.employeeId);
-    if (!employee) {
-      return res.status(404).json({
-        success: false,
-        message: 'Employee not found'
-      });
-    }
-
-    // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, employee.password);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password is incorrect'
-      });
-    }
-
-    // Hash new password
-    const saltRounds = 12;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password and first login flag
-    employee.password = hashedNewPassword;
-    employee.isFirstLogin = false;
-    await employee.save();
-
-    res.json({
-      success: true,
-      message: 'Password changed successfully'
-    });
-
-  } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to change password',
       error: error.message
     });
   }
