@@ -93,12 +93,19 @@ const Header = () => {
     { name: 'People', href: '/people' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
+    { name: 'Employee Portal', href: '/employee/login' },
   ]
 
   const userNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: UserIcon },
     { name: 'Profile Settings', href: '/profile', icon: UserIcon },
     { name: 'Upload Files', href: '/upload', icon: Cog6ToothIcon },
+  ]
+
+  const adminNavigation = [
+    { name: 'Admin Dashboard', href: '/admin', icon: Cog6ToothIcon },
+    { name: 'Employee Management', href: '/admin/employees', icon: UserIcon },
+    { name: 'Attendance Tracking', href: '/admin/attendance', icon: UserIcon },
   ]
 
   return (
@@ -203,6 +210,28 @@ const Header = () => {
                           )}
                         </Menu.Item>
                       ))}
+
+                      {/* Admin Navigation (only for admin users) */}
+                      {user?.role === 'admin' && (
+                        <>
+                          <div className="border-t border-slate-700 my-1"></div>
+                          {adminNavigation.map((item) => (
+                            <Menu.Item key={item.name}>
+                              {({ active }) => (
+                                <Link
+                                  href={item.href}
+                                  className={`${
+                                    active ? 'bg-slate-700' : ''
+                                  } flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors`}
+                                >
+                                  <item.icon className="mr-3 h-4 w-4" />
+                                  {item.name}
+                                </Link>
+                              )}
+                            </Menu.Item>
+                          ))}
+                        </>
+                      )}
 
                       {/* Collaborations */}
                       <Menu.Item>
@@ -332,6 +361,24 @@ const Header = () => {
                           {item.name}
                         </Link>
                       ))}
+
+                      {/* Admin Navigation for mobile (only for admin users) */}
+                      {user?.role === 'admin' && (
+                        <>
+                          <div className="border-t border-slate-700 my-2"></div>
+                          {adminNavigation.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-blue-400 hover:bg-slate-700 transition-colors"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <item.icon className="mr-3 h-5 w-5" />
+                              {item.name}
+                            </Link>
+                          ))}
+                        </>
+                      )}
                       <Link
                         href="/collaborations"
                         className="flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-blue-400 hover:bg-slate-700 transition-colors"

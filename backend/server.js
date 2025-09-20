@@ -16,6 +16,8 @@ import reportRoutes from './routes/reports.js';
 import notificationRoutes from './routes/notifications.js';
 import collaborationRoutes from './routes/collaborations.js';
 import jobRoutes from './routes/jobs.js';
+import employeeRoutes from './routes/employee.js';
+import attendanceRoutes from './routes/attendance.js';
 
 // Import services
 import EventReminderService from './services/EventReminderService.js';
@@ -78,6 +80,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/collaborations', collaborationRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/employee', employeeRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

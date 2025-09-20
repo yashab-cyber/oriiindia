@@ -1218,4 +1218,453 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+// Employee Management Routes
+
+// Get all employees with pagination and filters
+router.get('/employees', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, department, status, search } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build query
+    let query = {};
+    
+    if (department) {
+      query.department = department;
+    }
+    
+    if (status) {
+      query.employmentStatus = status;
+    }
+    
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { employeeId: { $regex: search, $options: 'i' } },
+        { position: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Import Employee model dynamically
+    const Employee = (await import('../models/Employee.js')).default;
+
+    const [employees, total] = await Promise.all([
+      Employee.find(query)
+        .select('-password')
+        .populate('manager', 'name employeeId position')
+        .populate('createdBy', 'firstName lastName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Employee.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        employees,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / parseInt(limit)),
+          total
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching employees',
+      error: error.message
+    });
+  }
+});
+
+// Create new employee
+router.post('/employees', async (req, res) => {
+  try {
+    const bcrypt = (await import('bcryptjs')).default;
+    const Employee = (await import('../models/Employee.js')).default;
+
+    const {
+      name,
+      email,
+      department,
+      position,
+      phoneNumber,
+      dateOfJoining,
+      salary,
+      manager,
+      workingHours,
+      address,
+      emergencyContact
+    } = req.body;
+
+    // Check if employee already exists
+    const existingEmployee = await Employee.findOne({ email: email.toLowerCase() });
+    if (existingEmployee) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee with this email already exists'
+      });
+    }
+
+    // Generate temporary password
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+    // Create employee
+    const employee = new Employee({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      department,
+      position,
+      phoneNumber,
+      dateOfJoining: dateOfJoining || new Date(),
+      salary,
+      manager,
+      workingHours,
+      address,
+      emergencyContact,
+      createdBy: req.user.id
+    });
+
+    await employee.save();
+
+    // Don't return password in response
+    const employeeResponse = employee.toJSON();
+    delete employeeResponse.password;
+
+    res.status(201).json({
+      success: true,
+      message: 'Employee created successfully',
+      data: {
+        employee: employeeResponse,
+        tempPassword // In production, send this via email
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creating employee:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating employee',
+      error: error.message
+    });
+  }
+});
+
+// Get employee by ID
+router.get('/employees/:id', async (req, res) => {
+  try {
+    const Employee = (await import('../models/Employee.js')).default;
+    
+    const employee = await Employee.findById(req.params.id)
+      .select('-password')
+      .populate('manager', 'name employeeId position')
+      .populate('createdBy', 'firstName lastName');
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: employee
+    });
+
+  } catch (error) {
+    console.error('Error fetching employee:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching employee',
+      error: error.message
+    });
+  }
+});
+
+// Update employee
+router.put('/employees/:id', async (req, res) => {
+  try {
+    const Employee = (await import('../models/Employee.js')).default;
+    
+    const updates = { ...req.body };
+    delete updates.password; // Don't allow password update through this route
+    delete updates.employeeId; // Don't allow employee ID change
+
+    const employee = await Employee.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Employee updated successfully',
+      data: employee
+    });
+
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating employee',
+      error: error.message
+    });
+  }
+});
+
+// Delete employee (soft delete by changing status)
+router.delete('/employees/:id', async (req, res) => {
+  try {
+    const Employee = (await import('../models/Employee.js')).default;
+    
+    const employee = await Employee.findByIdAndUpdate(
+      req.params.id,
+      { employmentStatus: 'terminated' },
+      { new: true }
+    ).select('-password');
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Employee deactivated successfully',
+      data: employee
+    });
+
+  } catch (error) {
+    console.error('Error deleting employee:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting employee',
+      error: error.message
+    });
+  }
+});
+
+// Get all attendance records with filters
+router.get('/attendance', async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      employee, 
+      department, 
+      date, 
+      startDate, 
+      endDate,
+      status
+    } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Import models
+    const Employee = (await import('../models/Employee.js')).default;
+    const Attendance = (await import('../models/Attendance.js')).default;
+
+    // Build query
+    let query = {};
+    
+    if (employee) {
+      query.employee = employee;
+    }
+    
+    if (date) {
+      const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      query.date = { $gte: targetDate, $lt: nextDay };
+    } else if (startDate && endDate) {
+      query.date = { 
+        $gte: new Date(startDate), 
+        $lte: new Date(endDate) 
+      };
+    }
+    
+    if (status) {
+      query.status = status;
+    }
+
+    // If department filter is specified, get employees from that department first
+    let employeeIds;
+    if (department) {
+      const deptEmployees = await Employee.find({ department }).select('_id');
+      employeeIds = deptEmployees.map(emp => emp._id);
+      query.employee = { $in: employeeIds };
+    }
+
+    const [attendance, total] = await Promise.all([
+      Attendance.find(query)
+        .populate('employee', 'name employeeId department position')
+        .sort({ date: -1, checkInTime: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Attendance.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        attendance,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / parseInt(limit)),
+          total
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching attendance records',
+      error: error.message
+    });
+  }
+});
+
+// Get attendance summary by employee
+router.get('/attendance/summary', async (req, res) => {
+  try {
+    const { startDate, endDate, department } = req.query;
+    
+    // Import models
+    const Employee = (await import('../models/Employee.js')).default;
+    const Attendance = (await import('../models/Attendance.js')).default;
+
+    // Default to current month if no dates provided
+    let start, end;
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+    } else {
+      const now = new Date();
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
+
+    // Get employees (optionally filtered by department)
+    let employeeQuery = { employmentStatus: 'active' };
+    if (department) {
+      employeeQuery.department = department;
+    }
+
+    const employees = await Employee.find(employeeQuery).select('name employeeId department position');
+
+    // Get attendance summaries for each employee
+    const summaries = await Promise.all(
+      employees.map(async (employee) => {
+        const summary = await Attendance.getAttendanceSummary(employee._id, start, end);
+        return {
+          employee: {
+            id: employee._id,
+            name: employee.name,
+            employeeId: employee.employeeId,
+            department: employee.department,
+            position: employee.position
+          },
+          ...summary
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        summaries,
+        dateRange: {
+          start: start.toISOString().split('T')[0],
+          end: end.toISOString().split('T')[0]
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching attendance summary:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching attendance summary',
+      error: error.message
+    });
+  }
+});
+
+// Approve/Reject regularization requests
+router.put('/attendance/:id/regularization', async (req, res) => {
+  try {
+    const { action, comments } = req.body; // action: 'approve' or 'reject'
+    
+    const Attendance = (await import('../models/Attendance.js')).default;
+    
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid action. Must be "approve" or "reject"'
+      });
+    }
+
+    const attendance = await Attendance.findById(req.params.id)
+      .populate('employee', 'name employeeId');
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attendance record not found'
+      });
+    }
+
+    if (!attendance.regularizationRequest.requested) {
+      return res.status(400).json({
+        success: false,
+        message: 'No regularization request found for this attendance'
+      });
+    }
+
+    // Update regularization request
+    attendance.regularizationRequest.status = action === 'approve' ? 'approved' : 'rejected';
+    attendance.regularizationRequest.approvedAt = new Date();
+    attendance.regularizationRequest.approvedBy = req.user.id;
+    
+    if (comments) {
+      attendance.regularizationRequest.comments = comments;
+    }
+
+    await attendance.save();
+
+    res.json({
+      success: true,
+      message: `Regularization request ${action}d successfully`,
+      data: attendance
+    });
+
+  } catch (error) {
+    console.error('Error processing regularization:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing regularization request',
+      error: error.message
+    });
+  }
+});
+
 export default router;
