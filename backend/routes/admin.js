@@ -1296,39 +1296,77 @@ router.get('/employees', async (req, res) => {
     const { page = 1, limit = 10, department, status, search } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Build query
-    let query = {};
+    // Import models
+    const Employee = (await import('../models/Employee.js')).default;
+    const User = (await import('../models/User.js')).default;
+
+    // Build queries for both Employee and User collections
+    let employeeQuery = {};
+    let userQuery = { isEmployee: true };
     
     if (department) {
-      query.department = department;
+      employeeQuery.department = department;
+      userQuery['employeeDetails.employeeDepartment'] = department;
     }
     
     if (status) {
-      query.employmentStatus = status;
+      employeeQuery.employmentStatus = status;
+      userQuery['employeeDetails.employmentStatus'] = status;
     }
     
     if (search) {
-      query.$or = [
+      employeeQuery.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
         { employeeId: { $regex: search, $options: 'i' } },
         { position: { $regex: search, $options: 'i' } }
       ];
+      userQuery.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { 'employeeDetails.employeeId': { $regex: search, $options: 'i' } },
+        { 'employeeDetails.position': { $regex: search, $options: 'i' } }
+      ];
     }
 
-    // Import Employee model dynamically
-    const Employee = (await import('../models/Employee.js')).default;
-
-    const [employees, total] = await Promise.all([
-      Employee.find(query)
+    // Get both regular employees and user-employees
+    const [regularEmployees, userEmployees] = await Promise.all([
+      Employee.find(employeeQuery)
         .select('-password')
         .populate('manager', 'name employeeId position')
         .populate('createdBy', 'firstName lastName')
+        .sort({ createdAt: -1 }),
+      User.find(userQuery)
+        .select('-password')
         .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit)),
-      Employee.countDocuments(query)
     ]);
+
+    // Transform user-employees to match employee format
+    const transformedUserEmployees = userEmployees.map(user => ({
+      _id: user._id,
+      employeeId: user.employeeDetails?.employeeId || 'N/A',
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.email,
+      department: user.employeeDetails?.employeeDepartment || 'N/A',
+      position: user.employeeDetails?.position || 'N/A',
+      phoneNumber: user.phone,
+      dateOfJoining: user.employeeDetails?.dateOfJoining || user.createdAt,
+      employmentStatus: user.employeeDetails?.employmentStatus || 'active',
+      salary: user.employeeDetails?.salary,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      isUserEmployee: true
+    }));
+
+    // Combine and sort all employees
+    const allEmployees = [...regularEmployees, ...transformedUserEmployees]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Apply pagination to combined results
+    const total = allEmployees.length;
+    const employees = allEmployees.slice(skip, skip + parseInt(limit));
 
     res.json({
       success: true,
@@ -1558,6 +1596,7 @@ router.get('/attendance', async (req, res) => {
 
     // Import models
     const Employee = (await import('../models/Employee.js')).default;
+    const User = (await import('../models/User.js')).default;
     const Attendance = (await import('../models/Attendance.js')).default;
 
     // Build query
@@ -1587,19 +1626,69 @@ router.get('/attendance', async (req, res) => {
     // If department filter is specified, get employees from that department first
     let employeeIds;
     if (department) {
-      const deptEmployees = await Employee.find({ department }).select('_id');
-      employeeIds = deptEmployees.map(emp => emp._id);
+      const [deptEmployees, deptUsers] = await Promise.all([
+        Employee.find({ department }).select('_id'),
+        User.find({ 
+          isEmployee: true, 
+          'employeeDetails.employeeDepartment': department 
+        }).select('_id')
+      ]);
+      employeeIds = [
+        ...deptEmployees.map(emp => emp._id),
+        ...deptUsers.map(user => user._id)
+      ];
       query.employee = { $in: employeeIds };
     }
 
-    const [attendance, total] = await Promise.all([
+    // Get attendance records without population first
+    const [attendanceRecords, total] = await Promise.all([
       Attendance.find(query)
-        .populate('employee', 'name employeeId department position')
         .sort({ date: -1, checkInTime: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       Attendance.countDocuments(query)
     ]);
+
+    // Manually populate employee data from both collections
+    const attendanceEmployeeIds = attendanceRecords.map(record => record.employee);
+    const [employees, users] = await Promise.all([
+      Employee.find({ _id: { $in: attendanceEmployeeIds } }).select('name employeeId department position'),
+      User.find({ _id: { $in: attendanceEmployeeIds }, isEmployee: true }).select('firstName lastName email employeeDetails')
+    ]);
+
+    // Create lookup maps
+    const employeeMap = new Map();
+    employees.forEach(emp => {
+      employeeMap.set(emp._id.toString(), {
+        name: emp.name,
+        employeeId: emp.employeeId,
+        department: emp.department,
+        position: emp.position
+      });
+    });
+
+    users.forEach(user => {
+      employeeMap.set(user._id.toString(), {
+        name: `${user.firstName} ${user.lastName}`,
+        employeeId: user.employeeDetails?.employeeId || 'N/A',
+        department: user.employeeDetails?.employeeDepartment || 'N/A',
+        position: user.employeeDetails?.position || 'N/A'
+      });
+    });
+
+    // Map attendance records with populated employee data
+    const attendance = attendanceRecords.map(record => {
+      const employeeData = employeeMap.get(record.employee.toString());
+      return {
+        ...record.toObject(),
+        employee: employeeData || {
+          name: 'Unknown Employee',
+          employeeId: 'N/A',
+          department: 'N/A',
+          position: 'N/A'
+        }
+      };
+    });
 
     res.json({
       success: true,

@@ -19,7 +19,7 @@ interface AttendanceRecord {
     employeeId: string;
     department: string;
     position: string;
-  };
+  } | null;
   date: string;
   checkInTime: string;
   checkOutTime?: string;
@@ -33,12 +33,13 @@ interface AttendanceRecord {
 
 interface AttendanceSummary {
   employee: {
-    id: string;
+    id?: string;
+    _id?: string;
     name: string;
     employeeId: string;
     department: string;
     position: string;
-  };
+  } | null;
   totalDays: number;
   presentDays: number;
   absentDays: number;
@@ -421,8 +422,12 @@ const AdminAttendanceManagement = () => {
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{record.employee.name}</div>
-                            <div className="text-sm text-gray-500">{record.employee.employeeId} • {record.employee.department}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {record.employee?.name || 'Unknown Employee'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {record.employee?.employeeId || 'N/A'} • {record.employee?.department || 'N/A'}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -531,7 +536,7 @@ const AdminAttendanceManagement = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {attendanceSummary.map((summary) => (
-                      <tr key={summary.employee.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={summary.employee?.id || summary.employee?._id || Math.random()} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-8 w-8">
@@ -540,8 +545,12 @@ const AdminAttendanceManagement = () => {
                               </div>
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{summary.employee.name}</div>
-                              <div className="text-sm text-gray-500">{summary.employee.employeeId} • {summary.employee.department}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {summary.employee?.name || 'Unknown Employee'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {summary.employee?.employeeId || 'N/A'} • {summary.employee?.department || 'N/A'}
+                              </div>
                             </div>
                           </div>
                         </td>
