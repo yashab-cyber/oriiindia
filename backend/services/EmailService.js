@@ -7,9 +7,39 @@ class EmailService {
   }
 
   async init() {
+    console.log('🔍 Debugging Email Config:');
+    console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
+    console.log('EMAIL_PORT:', process.env.EMAIL_PORT);
+    console.log('EMAIL_USER:', process.env.EMAIL_USER);
+    console.log('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
+    
+    // Always use Gmail SMTP if credentials are available
+    if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        // Use Gmail SMTP configuration from .env
+        this.transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: parseInt(process.env.EMAIL_PORT) || 587,
+          secure: false, // true for 465, false for other ports
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          }
+        });
+        
+        // Test the connection
+        await this.transporter.verify();
+        console.log('✅ Gmail SMTP configured successfully for:', process.env.EMAIL_USER);
+        return; // Exit early to avoid creating test account
+      } catch (error) {
+        console.error('❌ Gmail SMTP configuration failed:', error.message);
+        console.log('🔄 Falling back to test email service...');
+      }
+    } 
+    
     if (process.env.NODE_ENV === 'production') {
       // Production: Use actual SMTP server
-      this.transporter = nodemailer.createTransport({
+      this.transporter = nodemailer.createTransporter({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
         secure: false,
@@ -19,7 +49,7 @@ class EmailService {
         }
       });
     } else {
-      // Development: Use Ethereal for testing
+      // Development: Use Ethereal for testing (only if no Gmail config)
       this.createTestAccount();
     }
   }
@@ -308,4 +338,4 @@ class EmailService {
   }
 }
 
-export default new EmailService();
+export default EmailService;
