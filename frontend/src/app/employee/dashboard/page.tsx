@@ -418,7 +418,7 @@ const EmployeeDashboard = () => {
                   {recentAttendance.map((attendance, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(attendance.date).toLocaleDateString()}
+                        {new Date(attendance.date).toLocaleDateString('en-IN')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {attendance.formattedCheckIn}

@@ -432,7 +432,7 @@ const AdminAttendanceManagement = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(record.date).toLocaleDateString()}
+                        {new Date(record.date).toLocaleDateString('en-IN')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex items-center">

@@ -393,7 +393,7 @@ const AdminEmployeeManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(employee.dateOfJoining).toLocaleDateString()}
+                      {new Date(employee.dateOfJoining).toLocaleDateString('en-IN')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
