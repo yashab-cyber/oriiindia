@@ -5,6 +5,7 @@ import ResearchPaper from '../models/ResearchPaper.js';
 import Event from '../models/Event.js';
 import Report from '../models/Report.js';
 import { Job, JobApplication } from '../models/index.js';
+import EmailService from '../services/EmailService.js';
 
 const router = express.Router();
 
@@ -671,9 +672,25 @@ router.patch('/users/:userId/approve', async (req, res) => {
       });
     }
 
+    // Send approval email
+    try {
+      const emailService = new EmailService();
+      await emailService.init();
+      const emailResult = await emailService.sendApprovalEmail(user);
+      
+      if (emailResult.success) {
+        console.log(`✅ Approval email sent to ${user.email}`);
+      } else {
+        console.error(`❌ Failed to send approval email to ${user.email}:`, emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('Email service error during approval:', emailError);
+      // Don't fail the approval if email fails
+    }
+
     res.json({
       success: true,
-      message: 'User approved successfully',
+      message: 'User approved successfully and notification email sent',
       data: { user }
     });
   } catch (error) {
@@ -712,9 +729,25 @@ router.patch('/users/:userId/reject', async (req, res) => {
       });
     }
 
+    // Send rejection email
+    try {
+      const emailService = new EmailService();
+      await emailService.init();
+      const emailResult = await emailService.sendRejectionEmail(user, reason);
+      
+      if (emailResult.success) {
+        console.log(`✅ Rejection email sent to ${user.email}`);
+      } else {
+        console.error(`❌ Failed to send rejection email to ${user.email}:`, emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('Email service error during rejection:', emailError);
+      // Don't fail the rejection if email fails
+    }
+
     res.json({
       success: true,
-      message: 'User rejected successfully',
+      message: 'User rejected successfully and notification email sent',
       data: { user }
     });
   } catch (error) {

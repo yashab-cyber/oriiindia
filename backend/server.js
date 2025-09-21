@@ -158,6 +158,9 @@ app.post('/api/test-email', async (req, res) => {
   }
 });
 
+// Serve static files from public directory
+app.use('/api/public', express.static('public'));
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

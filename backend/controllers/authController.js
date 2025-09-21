@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import EmailService from '../services/EmailService.js';
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -41,10 +42,26 @@ export const register = async (req, res) => {
 
     await user.save();
 
+    // Send welcome email
+    try {
+      const emailService = new EmailService();
+      await emailService.init(); // Initialize with current environment variables
+      const emailResult = await emailService.sendWelcomeEmail(user);
+      
+      if (emailResult.success) {
+        console.log(`✅ Welcome email sent to ${user.email}`);
+      } else {
+        console.error(`❌ Failed to send welcome email to ${user.email}:`, emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('Email service error during registration:', emailError);
+      // Don't fail registration if email fails
+    }
+
     // Different response based on user role
     const message = isAdmin 
-      ? 'Registration successful! Admin account created and approved automatically. You can now login.'
-      : 'Registration successful! Your account is pending admin approval. You will be notified once approved.';
+      ? 'Registration successful! Admin account created and approved automatically. You can now login. Welcome email sent!'
+      : 'Registration successful! Your account is pending admin approval. You will be notified once approved. Welcome email sent!';
 
     res.status(201).json({
       success: true,
