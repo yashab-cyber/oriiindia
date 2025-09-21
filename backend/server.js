@@ -24,6 +24,7 @@ import collaborationRoutes from './routes/collaborations.js';
 import jobRoutes from './routes/jobs.js';
 import employeeRoutes from './routes/employee.js';
 import attendanceRoutes from './routes/attendance.js';
+import emailManagementRoutes from './routes/emailManagement.js';
 
 // Import services
 import EventReminderService from './services/EventReminderService.js';
@@ -169,6 +170,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/email', emailManagementRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/collaborations', collaborationRoutes);

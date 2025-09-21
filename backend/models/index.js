@@ -5,6 +5,8 @@ import Contact from './Contact.js';
 import Project from './Project.js';
 import Job from './Job.js';
 import JobApplication from './JobApplication.js';
+import EmailTemplate from './EmailTemplate.js';
+import EmailLog from './EmailLog.js';
 
 export {
   User,
@@ -13,7 +15,9 @@ export {
   Contact,
   Project,
   Job,
-  JobApplication
+  JobApplication,
+  EmailTemplate,
+  EmailLog
 };
 
 export default {
@@ -23,5 +27,7 @@ export default {
   Contact,
   Project,
   Job,
-  JobApplication
+  JobApplication,
+  EmailTemplate,
+  EmailLog
 };
