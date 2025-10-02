@@ -6,12 +6,36 @@ import User from '../models/User.js';
 import EmailService from '../services/EmailService.js';
 
 const router = express.Router();
-const emailService = new EmailService();
+
+// Initialize emailService with error handling
+let emailService;
+try {
+  emailService = new EmailService();
+} catch (error) {
+  console.error('❌ Failed to initialize EmailService:', error);
+  emailService = null;
+}
 
 // Middleware to ensure admin access
 const adminAuth = [authenticate, requireAdmin];
 router.use(authenticate);
 router.use(requireAdmin);
+
+// Email service health check
+router.get('/health', (req, res) => {
+  const emailConfig = {
+    serviceAvailable: !!emailService,
+    hasEmailHost: !!process.env.EMAIL_HOST,
+    hasEmailUser: !!process.env.EMAIL_USER,
+    hasEmailPass: !!process.env.EMAIL_PASS,
+    nodeEnv: process.env.NODE_ENV
+  };
+  
+  res.json({
+    success: true,
+    emailService: emailConfig
+  });
+});
 
 // ============================================================================
 // EMAIL TEMPLATES MANAGEMENT
@@ -278,6 +302,14 @@ router.post('/send/template', async (req, res) => {
       });
     }
     
+    if (!emailService) {
+      console.error('❌ EmailService not initialized');
+      return res.status(500).json({
+        success: false,
+        message: 'Email service not available'
+      });
+    }
+
     console.log('📤 Sending template email...');
     const result = await emailService.sendFromTemplate(
       templateId,
@@ -370,6 +402,14 @@ router.post('/send/custom', async (req, res) => {
       });
     }
     
+    if (!emailService) {
+      console.error('❌ EmailService not initialized');
+      return res.status(500).json({
+        success: false,
+        message: 'Email service not available'
+      });
+    }
+
     console.log('📤 Sending custom email...');
     const result = await emailService.sendCustomEmail(
       to,

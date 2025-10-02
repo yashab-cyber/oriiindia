@@ -22,11 +22,11 @@ class EmailService {
     console.log('EMAIL_USER:', process.env.EMAIL_USER);
     console.log('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
     
-    // Always use Gmail SMTP if credentials are available
+        // Always use Gmail SMTP if credentials are available
     if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       try {
         // Use Gmail SMTP configuration from .env
-        this.transporter = nodemailer.createTransport({
+        this.transporter = nodemailer.createTransporter({
           host: process.env.EMAIL_HOST,
           port: parseInt(process.env.EMAIL_PORT) || 587,
           secure: false, // true for 465, false for other ports
@@ -36,30 +36,60 @@ class EmailService {
           }
         });
         
-        // Test the connection
-        await this.transporter.verify();
-        console.log('✅ Gmail SMTP configured successfully for:', process.env.EMAIL_USER);
+        // Test the connection only in development
+        if (process.env.NODE_ENV !== 'production') {
+          try {
+            await this.transporter.verify();
+            console.log('✅ Gmail SMTP configured successfully for:', process.env.EMAIL_USER);
+          } catch (verifyError) {
+            console.warn('⚠️ Gmail SMTP verification failed, but continuing:', verifyError.message);
+          }
+        } else {
+          console.log('✅ Gmail SMTP configured for production:', process.env.EMAIL_USER);
+        }
         return; // Exit early to avoid creating test account
       } catch (error) {
         console.error('❌ Gmail SMTP configuration failed:', error.message);
         console.log('🔄 Falling back to test email service...');
       }
+    } else {
+      console.warn('⚠️ Email configuration incomplete:', {
+        EMAIL_HOST: !!process.env.EMAIL_HOST,
+        EMAIL_USER: !!process.env.EMAIL_USER,
+        EMAIL_PASS: !!process.env.EMAIL_PASS
+      });
     } 
     
     if (process.env.NODE_ENV === 'production') {
-      // Production: Use actual SMTP server
-      this.transporter = nodemailer.createTransporter({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
+      // Production: Try to use provided SMTP or skip email functionality
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+        try {
+          this.transporter = nodemailer.createTransporter({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT) || 587,
+            secure: false,
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASS
+            }
+          });
+          console.log('✅ Production SMTP configured');
+        } catch (error) {
+          console.error('❌ Production SMTP configuration failed:', error.message);
+          this.transporter = null;
         }
-      });
+      } else {
+        console.warn('⚠️ No email configuration available in production');
+        this.transporter = null;
+      }
     } else {
       // Development: Use Ethereal for testing (only if no Gmail config)
-      await this.createTestAccount();
+      try {
+        await this.createTestAccount();
+      } catch (error) {
+        console.error('❌ Failed to create test account:', error.message);
+        this.transporter = null;
+      }
     }
     this.initialized = true;
   }
@@ -87,10 +117,10 @@ class EmailService {
       await this.ensureInitialized();
       
       if (!this.transporter) {
-        console.error('Email transporter not initialized');
+        console.error('❌ Email transporter not initialized - email functionality disabled');
         return {
           success: false,
-          error: 'Email transporter not initialized'
+          error: 'Email service not available. Please check server configuration.'
         };
       }
 
