@@ -13,7 +13,14 @@ interface EmailTemplate {
   subject: string;
   content: string;
   category: string;
-  variables: string[];
+  variables: Array<{
+    name: string;
+    description: string;
+    type: string;
+    required: boolean;
+    defaultValue: string;
+    _id?: string;
+  }>;
   isActive: boolean;
   usageCount: number;
   createdAt: string;
@@ -276,7 +283,7 @@ const EmailTemplatesPage = () => {
                             key={index}
                             className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
                           >
-                            {variable}
+                            {variable.name}
                           </span>
                         ))}
                         {(template.variables || []).length > 3 && (
