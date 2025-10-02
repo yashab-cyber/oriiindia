@@ -694,6 +694,135 @@ class EmailService {
       throw error;
     }
   }
+
+  async sendBulkEmail(templateId, recipients, variables = {}, options = {}) {
+    try {
+      if (!templateId || !recipients || !Array.isArray(recipients)) {
+        throw new Error('Template ID and recipients array are required');
+      }
+
+      // Import models here to avoid circular dependencies
+      const EmailTemplate = (await import('../models/EmailTemplate.js')).default;
+      const EmailLog = (await import('../models/EmailLog.js')).default;
+      const Handlebars = (await import('handlebars')).default;
+
+      // Get the email template
+      const template = await EmailTemplate.findById(templateId);
+      if (!template) {
+        throw new Error('Email template not found');
+      }
+
+      if (!template.isActive) {
+        throw new Error('Email template is not active');
+      }
+
+      let successCount = 0;
+      let failureCount = 0;
+      const results = [];
+
+      // Process each recipient
+      for (const recipient of recipients) {
+        try {
+          // Merge template variables with recipient-specific variables
+          const mergedVariables = {
+            ...variables,
+            ...recipient.variables,
+            recipientName: recipient.name || recipient.email,
+            recipientEmail: recipient.email
+          };
+
+          // Compile the template with variables
+          const subjectTemplate = Handlebars.compile(template.subject);
+          const htmlTemplate = Handlebars.compile(template.htmlContent);
+          
+          const subject = subjectTemplate(mergedVariables);
+          const htmlContent = htmlTemplate(mergedVariables);
+
+          // Create email log entry
+          const emailLog = new EmailLog({
+            templateId: template._id,
+            templateName: template.name,
+            recipientEmail: recipient.email,
+            recipientName: recipient.name,
+            recipientUserId: recipient.userId,
+            subject: subject,
+            status: 'pending',
+            campaignId: options.campaignId,
+            campaignName: options.campaignName,
+            metadata: {
+              variables: mergedVariables,
+              senderUserId: options.senderUserId,
+              senderName: options.senderName
+            }
+          });
+
+          await emailLog.save();
+
+          // Send the email
+          await this.sendEmail(recipient.email, subject, htmlContent);
+
+          // Update log status to sent
+          emailLog.status = 'sent';
+          emailLog.sentAt = new Date();
+          await emailLog.save();
+
+          successCount++;
+          results.push({
+            email: recipient.email,
+            status: 'sent',
+            logId: emailLog._id
+          });
+
+          console.log(`✅ Bulk email sent to ${recipient.email}`);
+
+        } catch (emailError) {
+          failureCount++;
+          console.error(`❌ Failed to send email to ${recipient.email}:`, emailError);
+          
+          results.push({
+            email: recipient.email,
+            status: 'failed',
+            error: emailError.message
+          });
+
+          // Try to update log if it exists
+          try {
+            const failedLog = await EmailLog.findOne({
+              templateId: template._id,
+              recipientEmail: recipient.email,
+              status: 'pending'
+            }).sort({ createdAt: -1 });
+
+            if (failedLog) {
+              failedLog.status = 'failed';
+              failedLog.failureReason = emailError.message;
+              await failedLog.save();
+            }
+          } catch (logError) {
+            console.error('Failed to update email log:', logError);
+          }
+        }
+      }
+
+      // Update template usage count
+      template.metadata.usageCount = (template.metadata.usageCount || 0) + successCount;
+      template.metadata.lastUsed = new Date();
+      await template.save();
+
+      return {
+        success: successCount > 0,
+        successCount,
+        failureCount,
+        totalCount: recipients.length,
+        results,
+        message: `Bulk email completed: ${successCount} sent, ${failureCount} failed`
+      };
+
+    } catch (error) {
+      console.error('Error in sendBulkEmail:', error);
+      throw error;
+    }
+  }
 }
 
 export default EmailService;

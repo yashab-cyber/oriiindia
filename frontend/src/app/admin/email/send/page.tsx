@@ -243,7 +243,10 @@ const SendEmailPage = () => {
             templateId: selectedTemplate!._id,
             recipients,
             variables: templateVariables,
-            campaignName: `Bulk Email - ${selectedTemplate!.name} - ${new Date().toLocaleDateString()}`
+            options: {
+              campaignName: `Bulk Email - ${selectedTemplate!.name} - ${new Date().toLocaleDateString()}`,
+              campaignId: `campaign_${Date.now()}`
+            }
           })
         });
 
