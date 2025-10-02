@@ -8,6 +8,7 @@ import EmailService from '../services/EmailService.js';
 const router = express.Router();
 
 // Middleware to ensure admin access
+const adminAuth = [authenticate, requireAdmin];
 router.use(authenticate);
 router.use(requireAdmin);
 
@@ -382,79 +383,134 @@ router.post('/send/custom', async (req, res) => {
 // EMAIL LOGS AND HISTORY
 // ============================================================================
 
-// Get email logs with pagination and filtering
-router.get('/logs', async (req, res) => {
+// Get users for email sending
+router.get('/users', adminAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
+    const { search, role, isApproved } = req.query;
     
-    const query = {};
+    let query = {};
     
-    // Filter by status
-    if (req.query.status) {
-      query.status = req.query.status;
+    // Build query filters
+    if (role) query.role = role;
+    if (isApproved !== undefined) query.isApproved = isApproved === 'true';
+    
+    // Search functionality
+    if (search) {
+      query.$or = [
+        { firstName: new RegExp(search, 'i') },
+        { lastName: new RegExp(search, 'i') },
+        { email: new RegExp(search, 'i') }
+      ];
     }
-    
-    // Filter by email type
-    if (req.query.emailType) {
-      query.emailType = req.query.emailType;
-    }
-    
-    // Filter by recipient email
-    if (req.query.recipient) {
-      query['recipient.email'] = { $regex: req.query.recipient, $options: 'i' };
-    }
-    
-    // Filter by sender
-    if (req.query.sender) {
-      query['sender.userId'] = req.query.sender;
-    }
-    
-    // Filter by date range
-    if (req.query.startDate || req.query.endDate) {
-      query.createdAt = {};
-      if (req.query.startDate) {
-        query.createdAt.$gte = new Date(req.query.startDate);
-      }
-      if (req.query.endDate) {
-        query.createdAt.$lte = new Date(req.query.endDate);
-      }
-    }
-    
-    // Filter by bulk email batch
-    if (req.query.batchId) {
-      query['bulkEmail.batchId'] = req.query.batchId;
-    }
-    
-    const logs = await EmailLog.find(query)
-      .populate('recipient.userId', 'firstName lastName')
-      .populate('sender.userId', 'firstName lastName')
-      .populate('template.id', 'name category')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    
-    const total = await EmailLog.countDocuments(query);
-    
+
+    const users = await User.find(query)
+      .select('firstName lastName email role isApproved')
+      .sort({ firstName: 1, lastName: 1 })
+      .limit(500); // Reasonable limit to prevent performance issues
+
     res.json({
       success: true,
       data: {
-        logs,
-        pagination: {
-          current: page,
-          pages: Math.ceil(total / limit),
-          total,
-          limit
-        }
+        users
       }
     });
+
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users'
+    });
+  }
+});
+
+// Get email logs with filtering and pagination
+router.get('/logs', adminAuth, async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 20, 
+      status,
+      templateId,
+      recipientEmail,
+      campaignId,
+      dateFilter,
+      search
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    let query = {};
+
+    // Build query filters
+    if (status) query.status = status;
+    if (templateId) query.templateId = templateId;
+    if (recipientEmail) query.recipientEmail = new RegExp(recipientEmail, 'i');
+    if (campaignId) query.campaignId = campaignId;
+
+    // Date filters
+    if (dateFilter) {
+      const now = new Date();
+      const startDate = new Date();
+
+      switch (dateFilter) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'quarter':
+          startDate.setMonth(now.getMonth() - 3);
+          break;
+      }
+
+      if (dateFilter !== 'all') {
+        query.createdAt = { $gte: startDate };
+      }
+    }
+
+    // Search functionality
+    if (search) {
+      query.$or = [
+        { recipientEmail: new RegExp(search, 'i') },
+        { subject: new RegExp(search, 'i') },
+        { templateName: new RegExp(search, 'i') }
+      ];
+    }
+
+    const logs = await EmailLog.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('templateId', 'name')
+      .lean();
+
+    const total = await EmailLog.countDocuments(query);
+
+    // Transform logs to include template name
+    const transformedLogs = logs.map(log => ({
+      ...log,
+      templateName: log.templateId?.name || null
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        logs: transformedLogs,
+        total,
+        page: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+
   } catch (error) {
     console.error('Error fetching email logs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch email logs',
-      error: error.message
+      message: 'Failed to fetch email logs'
     });
   }
 });
@@ -766,6 +822,336 @@ router.get('/templates/categories', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch categories',
+      error: error.message
+    });
+  }
+});
+
+// Enhanced detailed analytics with trends and breakdowns
+router.get('/analytics/detailed', async (req, res) => {
+  try {
+    const { period = '30d' } = req.query;
+    const now = new Date();
+    let startDate = new Date();
+
+    // Calculate start date based on period
+    switch (period) {
+      case '7d':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(now.getDate() - 90);
+        break;
+      case '1y':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        startDate.setDate(now.getDate() - 30);
+    }
+
+    // Get basic stats
+    const [
+      totalEmails,
+      sentEmails,
+      deliveredEmails,
+      openedEmails,
+      clickedEmails,
+      failedEmails
+    ] = await Promise.all([
+      EmailLog.countDocuments({ createdAt: { $gte: startDate } }),
+      EmailLog.countDocuments({ 
+        createdAt: { $gte: startDate },
+        status: { $in: ['sent', 'delivered', 'opened', 'clicked'] } 
+      }),
+      EmailLog.countDocuments({ 
+        createdAt: { $gte: startDate },
+        status: { $in: ['delivered', 'opened', 'clicked'] } 
+      }),
+      EmailLog.countDocuments({ 
+        createdAt: { $gte: startDate },
+        status: { $in: ['opened', 'clicked'] } 
+      }),
+      EmailLog.countDocuments({ 
+        createdAt: { $gte: startDate },
+        status: 'clicked' 
+      }),
+      EmailLog.countDocuments({ 
+        createdAt: { $gte: startDate },
+        status: { $in: ['failed', 'bounced'] } 
+      })
+    ]);
+
+    // Calculate rates
+    const deliveryRate = sentEmails > 0 ? (deliveredEmails / sentEmails) * 100 : 0;
+    const openRate = deliveredEmails > 0 ? (openedEmails / deliveredEmails) * 100 : 0;
+    const clickRate = deliveredEmails > 0 ? (clickedEmails / deliveredEmails) * 100 : 0;
+    const bounceRate = sentEmails > 0 ? (failedEmails / sentEmails) * 100 : 0;
+
+    // Get email trends (daily aggregation)
+    const emailTrends = await EmailLog.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate } 
+        } 
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+          },
+          sent: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["sent", "delivered", "opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          delivered: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["delivered", "opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          opened: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          clicked: { 
+            $sum: { 
+              $cond: [{ $eq: ["$status", "clicked"] }, 1, 0] 
+            } 
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Get template performance
+    const templateStats = await EmailLog.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate },
+          templateId: { $exists: true }
+        } 
+      },
+      {
+        $lookup: {
+          from: 'emailtemplates',
+          localField: 'templateId',
+          foreignField: '_id',
+          as: 'template'
+        }
+      },
+      {
+        $group: {
+          _id: "$templateId",
+          templateName: { $first: { $arrayElemAt: ["$template.name", 0] } },
+          totalSent: { $sum: 1 },
+          delivered: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["delivered", "opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          opened: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          clicked: { 
+            $sum: { 
+              $cond: [{ $eq: ["$status", "clicked"] }, 1, 0] 
+            } 
+          }
+        }
+      },
+      {
+        $addFields: {
+          openRate: { 
+            $cond: [
+              { $eq: ["$delivered", 0] }, 
+              0, 
+              { $multiply: [{ $divide: ["$opened", "$delivered"] }, 100] }
+            ]
+          },
+          clickRate: { 
+            $cond: [
+              { $eq: ["$delivered", 0] }, 
+              0, 
+              { $multiply: [{ $divide: ["$clicked", "$delivered"] }, 100] }
+            ]
+          }
+        }
+      },
+      { $sort: { totalSent: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Get campaign performance
+    const campaignStats = await EmailLog.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate },
+          campaignId: { $exists: true }
+        } 
+      },
+      {
+        $group: {
+          _id: "$campaignId",
+          campaignName: { $first: "$campaignName" },
+          totalSent: { $sum: 1 },
+          delivered: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["delivered", "opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          opened: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["opened", "clicked"]] }, 1, 0] 
+            } 
+          },
+          clicked: { 
+            $sum: { 
+              $cond: [{ $eq: ["$status", "clicked"] }, 1, 0] 
+            } 
+          }
+        }
+      },
+      {
+        $addFields: {
+          deliveryRate: { 
+            $cond: [
+              { $eq: ["$totalSent", 0] }, 
+              0, 
+              { $multiply: [{ $divide: ["$delivered", "$totalSent"] }, 100] }
+            ]
+          },
+          openRate: { 
+            $cond: [
+              { $eq: ["$delivered", 0] }, 
+              0, 
+              { $multiply: [{ $divide: ["$opened", "$delivered"] }, 100] }
+            ]
+          },
+          clickRate: { 
+            $cond: [
+              { $eq: ["$delivered", 0] }, 
+              0, 
+              { $multiply: [{ $divide: ["$clicked", "$delivered"] }, 100] }
+            ]
+          }
+        }
+      },
+      { $sort: { totalSent: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Mock device stats (would need user agent tracking in production)
+    const deviceStats = {
+      mobile: Math.floor(totalEmails * 0.6),
+      desktop: Math.floor(totalEmails * 0.3),
+      tablet: Math.floor(totalEmails * 0.08),
+      unknown: Math.floor(totalEmails * 0.02)
+    };
+
+    // Get top domains
+    const topDomains = await EmailLog.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate } 
+        } 
+      },
+      {
+        $addFields: {
+          domain: {
+            $arrayElemAt: [
+              { $split: ["$recipientEmail", "@"] },
+              1
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$domain",
+          count: { $sum: 1 },
+          delivered: { 
+            $sum: { 
+              $cond: [{ $in: ["$status", ["delivered", "opened", "clicked"]] }, 1, 0] 
+            } 
+          }
+        }
+      },
+      {
+        $addFields: {
+          deliveryRate: { 
+            $cond: [
+              { $eq: ["$count", 0] }, 
+              0, 
+              { $multiply: [{ $divide: ["$delivered", "$count"] }, 100] }
+            ]
+          }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalEmails,
+        sentEmails,
+        deliveredEmails,
+        openedEmails,
+        clickedEmails,
+        failedEmails,
+        deliveryRate,
+        openRate,
+        clickRate,
+        bounceRate,
+        emailTrends: emailTrends.map(trend => ({
+          date: trend._id,
+          sent: trend.sent,
+          delivered: trend.delivered,
+          opened: trend.opened,
+          clicked: trend.clicked
+        })),
+        templateStats: templateStats.map(stat => ({
+          templateId: stat._id,
+          templateName: stat.templateName || 'Unknown Template',
+          totalSent: stat.totalSent,
+          delivered: stat.delivered,
+          opened: stat.opened,
+          clicked: stat.clicked,
+          openRate: stat.openRate,
+          clickRate: stat.clickRate
+        })),
+        campaignStats: campaignStats.map(stat => ({
+          campaignId: stat._id,
+          campaignName: stat.campaignName || 'Unknown Campaign',
+          totalSent: stat.totalSent,
+          delivered: stat.delivered,
+          opened: stat.opened,
+          clicked: stat.clicked,
+          deliveryRate: stat.deliveryRate,
+          openRate: stat.openRate,
+          clickRate: stat.clickRate
+        })),
+        deviceStats,
+        topDomains: topDomains.map(domain => ({
+          domain: domain._id,
+          count: domain.count,
+          deliveryRate: domain.deliveryRate
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching detailed analytics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch detailed analytics data',
       error: error.message
     });
   }

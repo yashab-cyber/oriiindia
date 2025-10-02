@@ -1,4 +1,4 @@
-import EmailTemplate from '../models/EmailTemplate.js';
+ import EmailTemplate from '../models/EmailTemplate.js';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
