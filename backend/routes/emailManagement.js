@@ -263,15 +263,22 @@ router.post('/templates/:id/clone', async (req, res) => {
 // Send single email from template
 router.post('/send/template', async (req, res) => {
   try {
+    console.log('📧 Template email request received:', {
+      user: req.user?.email,
+      body: req.body
+    });
+    
     const { templateId, recipientEmail, variables, options = {} } = req.body;
     
     if (!templateId || !recipientEmail) {
+      console.log('❌ Missing required fields:', { templateId: !!templateId, recipientEmail: !!recipientEmail });
       return res.status(400).json({
         success: false,
         message: 'Template ID and recipient email are required'
       });
     }
     
+    console.log('📤 Sending template email...');
     const result = await emailService.sendFromTemplate(
       templateId,
       recipientEmail,
@@ -283,13 +290,15 @@ router.post('/send/template', async (req, res) => {
       }
     );
     
+    console.log('📧 Template email result:', result);
+    
     res.json({
       success: result.success,
       message: result.success ? 'Email sent successfully' : 'Failed to send email',
       data: result
     });
   } catch (error) {
-    console.error('Error sending template email:', error);
+    console.error('❌ Error sending template email:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to send email',
@@ -346,15 +355,22 @@ router.post('/send/bulk', async (req, res) => {
 // Send custom email (without template)
 router.post('/send/custom', async (req, res) => {
   try {
+    console.log('📧 Custom email request received:', {
+      user: req.user?.email,
+      body: req.body
+    });
+    
     const { to, subject, html, text, options = {} } = req.body;
     
     if (!to || !subject || !html) {
+      console.log('❌ Missing required fields:', { to: !!to, subject: !!subject, html: !!html });
       return res.status(400).json({
         success: false,
         message: 'Recipient, subject, and HTML content are required'
       });
     }
     
+    console.log('📤 Sending custom email...');
     const result = await emailService.sendCustomEmail(
       to,
       subject,
@@ -367,13 +383,15 @@ router.post('/send/custom', async (req, res) => {
       }
     );
     
+    console.log('📧 Custom email result:', result);
+    
     res.json({
       success: result.success,
       message: result.success ? 'Email sent successfully' : 'Failed to send email',
       data: result
     });
   } catch (error) {
-    console.error('Error sending custom email:', error);
+    console.error('❌ Error sending custom email:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to send email',

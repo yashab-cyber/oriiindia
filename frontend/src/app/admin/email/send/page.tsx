@@ -210,10 +210,14 @@ const SendEmailPage = () => {
           body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
           toast.success('Email sent successfully!');
         } else {
-          throw new Error('Failed to send email');
+          const errorMsg = result.message || result.error || 'Failed to send email';
+          toast.error(errorMsg);
+          throw new Error(errorMsg);
         }
       } else {
         // Bulk email
@@ -250,11 +254,14 @@ const SendEmailPage = () => {
           })
         });
 
-        if (response.ok) {
-          const result = await response.json();
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
           toast.success(`Bulk email initiated! ${result.data.successCount} emails queued for sending.`);
         } else {
-          throw new Error('Failed to send bulk email');
+          const errorMsg = result.message || result.error || 'Failed to send bulk email';
+          toast.error(errorMsg);
+          throw new Error(errorMsg);
         }
       }
 
