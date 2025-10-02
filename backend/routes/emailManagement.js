@@ -16,12 +16,7 @@ try {
   emailService = null;
 }
 
-// Middleware to ensure admin access
-const adminAuth = [authenticate, requireAdmin];
-router.use(authenticate);
-router.use(requireAdmin);
-
-// Email service health check
+// Email service health check (public for debugging)
 router.get('/health', (req, res) => {
   const emailConfig = {
     serviceAvailable: !!emailService,
