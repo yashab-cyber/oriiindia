@@ -104,7 +104,7 @@ const SendEmailPage = () => {
     
     // Initialize template variables with default values
     const initialVariables: Record<string, string> = {};
-    template.variables.forEach(variable => {
+    (template.variables || []).forEach(variable => {
       initialVariables[variable.name] = variable.defaultValue || '';
     });
     setTemplateVariables(initialVariables);
@@ -149,7 +149,7 @@ const SendEmailPage = () => {
   const validateTemplateVariables = () => {
     if (!selectedTemplate) return true;
     
-    const missingRequired = selectedTemplate.variables
+    const missingRequired = (selectedTemplate.variables || [])
       .filter(v => v.required && !templateVariables[v.name])
       .map(v => v.name);
     
@@ -368,7 +368,7 @@ const SendEmailPage = () => {
               <div className="bg-white p-6 rounded-lg shadow">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Template Variables</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedTemplate.variables.map(variable => (
+                  {(selectedTemplate.variables || []).map(variable => (
                     <div key={variable.name}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {variable.description}

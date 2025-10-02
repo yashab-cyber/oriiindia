@@ -300,22 +300,22 @@ const EmailAnalyticsPage = () => {
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Performance Trends</h3>
               <div className="h-64 flex items-end justify-between space-x-2">
-                {analyticsData.emailTrends.slice(-14).map((trend, index) => (
+                {(analyticsData?.emailTrends || []).slice(-14).map((trend, index) => (
                   <div key={index} className="flex-1 flex flex-col items-center">
                     <div className="w-full space-y-1">
                       <div 
                         className="bg-blue-500 rounded-sm" 
-                        style={{ height: `${Math.max((trend.sent / Math.max(...analyticsData.emailTrends.map(t => t.sent))) * 200, 4)}px` }}
+                        style={{ height: `${Math.max((trend.sent / Math.max(...(analyticsData?.emailTrends || []).map(t => t.sent))) * 200, 4)}px` }}
                         title={`Sent: ${trend.sent}`}
                       ></div>
                       <div 
                         className="bg-green-500 rounded-sm" 
-                        style={{ height: `${Math.max((trend.delivered / Math.max(...analyticsData.emailTrends.map(t => t.delivered))) * 200, 2)}px` }}
+                        style={{ height: `${Math.max((trend.delivered / Math.max(...(analyticsData?.emailTrends || []).map(t => t.delivered))) * 200, 2)}px` }}
                         title={`Delivered: ${trend.delivered}`}
                       ></div>
                       <div 
                         className="bg-purple-500 rounded-sm" 
-                        style={{ height: `${Math.max((trend.opened / Math.max(...analyticsData.emailTrends.map(t => t.opened))) * 200, 1)}px` }}
+                        style={{ height: `${Math.max((trend.opened / Math.max(...(analyticsData?.emailTrends || []).map(t => t.opened))) * 200, 1)}px` }}
                         title={`Opened: ${trend.opened}`}
                       ></div>
                     </div>
@@ -345,7 +345,7 @@ const EmailAnalyticsPage = () => {
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Breakdown</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(analyticsData.deviceStats).map(([device, count]) => (
+                {Object.entries(analyticsData?.deviceStats || {}).map(([device, count]) => (
                   <div key={device} className="text-center">
                     <p className="text-2xl font-bold text-gray-900">{count}</p>
                     <p className="text-sm text-gray-600 capitalize">{device}</p>
@@ -381,7 +381,7 @@ const EmailAnalyticsPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {analyticsData.templateStats.map((template) => (
+                  {(analyticsData?.templateStats || []).map((template) => (
                     <tr key={template.templateId} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <p className="text-sm font-medium text-gray-900">{template.templateName}</p>
@@ -447,7 +447,7 @@ const EmailAnalyticsPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {analyticsData.campaignStats.map((campaign) => (
+                  {(analyticsData?.campaignStats || []).map((campaign) => (
                     <tr key={campaign.campaignId} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <p className="text-sm font-medium text-gray-900">{campaign.campaignName}</p>
@@ -519,7 +519,7 @@ const EmailAnalyticsPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {analyticsData.topDomains.map((domain, index) => (
+                  {(analyticsData?.topDomains || []).map((domain, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <p className="text-sm font-medium text-gray-900">@{domain.domain}</p>

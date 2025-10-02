@@ -59,7 +59,7 @@ const EmailManagementDashboard = () => {
 
       if (templatesRes.ok) {
         const templatesData = await templatesRes.json();
-        setStats(prev => ({ ...prev, totalTemplates: templatesData.length }));
+        setStats(prev => ({ ...prev, totalTemplates: templatesData.data?.templates?.length || 0 }));
       }
 
       if (analyticsRes.ok) {
@@ -245,9 +245,9 @@ const EmailManagementDashboard = () => {
             <p className="text-gray-600">Latest email operations and status updates</p>
           </div>
           <div className="p-6">
-            {stats.recentEmails.length > 0 ? (
+            {(stats.recentEmails || []).length > 0 ? (
               <div className="space-y-4">
-                {stats.recentEmails.slice(0, 5).map((email: any, index: number) => (
+                {(stats.recentEmails || []).slice(0, 5).map((email: any, index: number) => (
                   <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center">
                       <div className="bg-blue-50 rounded-lg p-2">

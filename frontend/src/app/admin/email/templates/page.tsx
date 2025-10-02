@@ -68,7 +68,7 @@ const EmailTemplatesPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setTemplates(data);
+        setTemplates(data.data?.templates || []);
       } else {
         toast.error('Failed to fetch templates');
       }
@@ -267,11 +267,11 @@ const EmailTemplatesPage = () => {
                     <span>Created {new Date(template.createdAt).toLocaleDateString()}</span>
                   </div>
 
-                  {template.variables.length > 0 && (
+                  {(template.variables || []).length > 0 && (
                     <div className="mt-3">
                       <p className="text-xs text-gray-500 mb-2">Variables:</p>
                       <div className="flex flex-wrap gap-1">
-                        {template.variables.slice(0, 3).map((variable, index) => (
+                        {(template.variables || []).slice(0, 3).map((variable, index) => (
                           <span
                             key={index}
                             className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
@@ -279,9 +279,9 @@ const EmailTemplatesPage = () => {
                             {variable}
                           </span>
                         ))}
-                        {template.variables.length > 3 && (
+                        {(template.variables || []).length > 3 && (
                           <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                            +{template.variables.length - 3} more
+                            +{(template.variables || []).length - 3} more
                           </span>
                         )}
                       </div>
