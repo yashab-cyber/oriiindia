@@ -12,6 +12,8 @@ const AdminDashboard = () => {
     pendingPapers: 0,
     totalPapers: 0,
     upcomingEvents: 0,
+    totalEmailTemplates: 0,
+    emailsSentToday: 0,
     recentActivities: []
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +99,7 @@ const AdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -172,6 +174,48 @@ const AdminDashboard = () => {
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Upcoming Events</dt>
                     <dd className="text-lg font-medium text-gray-900">{stats.upcomingEvents}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Email Templates</dt>
+                    <dd className="text-lg font-medium text-gray-900">{stats.totalEmailTemplates}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-teal-500 rounded-md flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414L11 7.586V3a1 1 0 10-2 0v4.586l-.293-.293z" />
+                      <path d="M3 5a2 2 0 012-2h1a1 1 0 010 2H5v7h2l1 2h4l1-2h2V5h-1a1 1 0 110-2h1a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Emails Sent Today</dt>
+                    <dd className="text-lg font-medium text-gray-900">{stats.emailsSentToday}</dd>
                   </dl>
                 </div>
               </div>
@@ -337,6 +381,27 @@ const AdminDashboard = () => {
                   <div className="ml-5">
                     <h3 className="text-lg font-medium text-gray-900 group-hover:text-rose-600">Attendance Tracking</h3>
                     <p className="text-sm text-gray-500">Monitor employee attendance and reports</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/admin/email" className="group">
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600">Email Management</h3>
+                    <p className="text-sm text-gray-500">Send emails, manage templates and campaigns</p>
                   </div>
                 </div>
               </div>
