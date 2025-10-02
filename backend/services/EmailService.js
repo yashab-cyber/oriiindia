@@ -3,10 +3,19 @@ import nodemailer from 'nodemailer';
 class EmailService {
   constructor() {
     this.transporter = null;
-    this.init();
+    this.initialized = false;
+  }
+
+  async ensureInitialized() {
+    if (this.initialized) return;
+    await this.init();
   }
 
   async init() {
+    // Force reload dotenv in case it wasn't loaded properly
+    const dotenv = await import('dotenv');
+    dotenv.config();
+    
     console.log('🔍 Debugging Email Config:');
     console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
     console.log('EMAIL_PORT:', process.env.EMAIL_PORT);
@@ -50,8 +59,9 @@ class EmailService {
       });
     } else {
       // Development: Use Ethereal for testing (only if no Gmail config)
-      this.createTestAccount();
+      await this.createTestAccount();
     }
+    this.initialized = true;
   }
 
   async createTestAccount() {
@@ -74,9 +84,14 @@ class EmailService {
 
   async sendEmail(to, subject, html) {
     try {
+      await this.ensureInitialized();
+      
       if (!this.transporter) {
         console.error('Email transporter not initialized');
-        return false;
+        return {
+          success: false,
+          error: 'Email transporter not initialized'
+        };
       }
 
       const mailOptions = {
