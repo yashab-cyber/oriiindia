@@ -6,6 +6,8 @@ import Event from '../models/Event.js';
 import Report from '../models/Report.js';
 import { Job, JobApplication } from '../models/index.js';
 import EmailService from '../services/EmailService.js';
+import EmailTemplate from '../models/EmailTemplate.js';
+import EmailLog from '../models/EmailLog.js';
 
 const router = express.Router();
 
@@ -23,6 +25,22 @@ router.get('/stats', async (req, res) => {
     const totalPapers = await ResearchPaper.countDocuments();
     const upcomingEvents = await Event.countDocuments({ 
       startDate: { $gte: new Date() } 
+    });
+
+    // Get email statistics
+    const totalEmailTemplates = await EmailTemplate.countDocuments({ isActive: true });
+    
+    // Get today's sent emails
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const emailsSentToday = await EmailLog.countDocuments({
+      sentAt: {
+        $gte: today,
+        $lt: tomorrow
+      }
     });
 
     // Get recent activities (you can customize this based on your needs)
@@ -60,6 +78,8 @@ router.get('/stats', async (req, res) => {
         pendingPapers,
         totalPapers,
         upcomingEvents,
+        totalEmailTemplates,
+        emailsSentToday,
         recentActivities: flatActivities.slice(0, 10)
       }
     });
