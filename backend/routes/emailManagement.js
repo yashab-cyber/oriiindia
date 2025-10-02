@@ -440,7 +440,7 @@ router.post('/send/custom', async (req, res) => {
 // ============================================================================
 
 // Get users for email sending
-router.get('/users', adminAuth, async (req, res) => {
+router.get('/users', async (req, res) => {
   try {
     const { search, role, isApproved } = req.query;
     
@@ -481,7 +481,7 @@ router.get('/users', adminAuth, async (req, res) => {
 });
 
 // Get email logs with filtering and pagination
-router.get('/logs', adminAuth, async (req, res) => {
+router.get('/logs', async (req, res) => {
   try {
     const { 
       page = 1, 
