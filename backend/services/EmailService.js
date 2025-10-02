@@ -105,6 +105,146 @@ class EmailService {
     }
   }
 
+  async sendFromTemplate(templateId, recipientEmail, variables = {}, options = {}) {
+    try {
+      // Import models here to avoid circular dependencies
+      const EmailTemplate = (await import('../models/EmailTemplate.js')).default;
+      const EmailLog = (await import('../models/EmailLog.js')).default;
+      const Handlebars = (await import('handlebars')).default;
+
+      // Get the email template
+      const template = await EmailTemplate.findById(templateId);
+      if (!template) {
+        throw new Error('Email template not found');
+      }
+
+      if (!template.isActive) {
+        throw new Error('Email template is not active');
+      }
+
+      // Merge variables with default values
+      const mergedVariables = {
+        ...variables,
+        recipientEmail: recipientEmail
+      };
+
+      // Compile the template with variables
+      const subjectTemplate = Handlebars.compile(template.subject);
+      const htmlTemplate = Handlebars.compile(template.htmlContent);
+      
+      const subject = subjectTemplate(mergedVariables);
+      const htmlContent = htmlTemplate(mergedVariables);
+
+      // Create email log entry
+      const emailLog = new EmailLog({
+        templateId: template._id,
+        templateName: template.name,
+        recipientEmail: recipientEmail,
+        subject: subject,
+        status: 'pending',
+        metadata: {
+          variables: mergedVariables,
+          senderUserId: options.senderUserId,
+          senderName: options.senderName
+        }
+      });
+
+      await emailLog.save();
+
+      // Send the email
+      const result = await this.sendEmail(recipientEmail, subject, htmlContent);
+
+      if (result.success) {
+        // Update log status to sent
+        emailLog.status = 'sent';
+        emailLog.sentAt = new Date();
+        await emailLog.save();
+
+        // Update template usage count
+        template.metadata.usageCount = (template.metadata.usageCount || 0) + 1;
+        template.metadata.lastUsed = new Date();
+        await template.save();
+
+        console.log(`✅ Template email sent to ${recipientEmail}`);
+        
+        return {
+          success: true,
+          logId: emailLog._id,
+          messageId: result.messageId
+        };
+      } else {
+        // Update log status to failed
+        emailLog.status = 'failed';
+        emailLog.failureReason = result.error;
+        await emailLog.save();
+        
+        return {
+          success: false,
+          error: result.error,
+          logId: emailLog._id
+        };
+      }
+
+    } catch (error) {
+      console.error('Error in sendFromTemplate:', error);
+      throw error;
+    }
+  }
+
+  async sendCustomEmail(to, subject, html, text = null, options = {}) {
+    try {
+      // Import models here to avoid circular dependencies
+      const EmailLog = (await import('../models/EmailLog.js')).default;
+
+      // Create email log entry
+      const emailLog = new EmailLog({
+        recipientEmail: to,
+        subject: subject,
+        status: 'pending',
+        metadata: {
+          emailType: 'custom',
+          senderUserId: options.senderUserId,
+          senderName: options.senderName
+        }
+      });
+
+      await emailLog.save();
+
+      // Send the email
+      const result = await this.sendEmail(to, subject, html);
+
+      if (result.success) {
+        // Update log status to sent
+        emailLog.status = 'sent';
+        emailLog.sentAt = new Date();
+        await emailLog.save();
+
+        console.log(`✅ Custom email sent to ${to}`);
+        
+        return {
+          success: true,
+          logId: emailLog._id,
+          messageId: result.messageId
+        };
+      } else {
+        // Update log status to failed
+        emailLog.status = 'failed';
+        emailLog.failureReason = result.error;
+        await emailLog.save();
+        
+        return {
+          success: false,
+          error: result.error,
+          logId: emailLog._id
+        };
+      }
+
+    } catch (error) {
+      console.error('Error in sendCustomEmail:', error);
+      throw error;
+    }
+  }
+
   // Welcome email for new user registration
   async sendWelcomeEmail(user) {
     try {

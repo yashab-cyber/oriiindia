@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import EmailService from '../services/EmailService.js';
 
 const router = express.Router();
+const emailService = new EmailService();
 
 // Middleware to ensure admin access
 const adminAuth = [authenticate, requireAdmin];
@@ -271,7 +272,7 @@ router.post('/send/template', async (req, res) => {
       });
     }
     
-    const result = await EmailService.sendFromTemplate(
+    const result = await emailService.sendFromTemplate(
       templateId,
       recipientEmail,
       variables,
@@ -316,7 +317,7 @@ router.post('/send/bulk', async (req, res) => {
       });
     }
     
-    const result = await EmailService.sendBulkEmail(
+    const result = await emailService.sendBulkEmail(
       templateId,
       recipients,
       variables,
@@ -354,11 +355,13 @@ router.post('/send/custom', async (req, res) => {
       });
     }
     
-    const result = await EmailService.sendEmail(
-      { to, subject, html, text },
+    const result = await emailService.sendCustomEmail(
+      to,
+      subject,
+      html,
+      text,
       {
         ...options,
-        emailType: 'custom',
         senderUserId: req.user.id,
         senderName: `${req.user.firstName} ${req.user.lastName}`
       }
