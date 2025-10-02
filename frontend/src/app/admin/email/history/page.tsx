@@ -253,7 +253,7 @@ const EmailHistoryPage = () => {
                 <Mail className="h-8 w-8 text-blue-500" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Emails</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.totalEmails}</p>
+                  <p className="text-2xl font-bold text-gray-900">{emailStats?.totalEmails || 0}</p>
                 </div>
               </div>
             </div>
@@ -263,8 +263,8 @@ const EmailHistoryPage = () => {
                 <CheckCircle className="h-8 w-8 text-green-500" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Delivered</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.deliveredEmails}</p>
-                  <p className="text-xs text-green-600">{emailStats.deliveryRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{emailStats?.deliveredEmails || 0}</p>
+                  <p className="text-xs text-green-600">{(emailStats?.deliveryRate || 0).toFixed(1)}%</p>
                 </div>
               </div>
             </div>
@@ -274,8 +274,8 @@ const EmailHistoryPage = () => {
                 <Eye className="h-8 w-8 text-purple-500" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Opened</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.openedEmails}</p>
-                  <p className="text-xs text-purple-600">{emailStats.openRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{emailStats?.openedEmails || 0}</p>
+                  <p className="text-xs text-purple-600">{(emailStats?.openRate || 0).toFixed(1)}%</p>
                 </div>
               </div>
             </div>
@@ -285,8 +285,8 @@ const EmailHistoryPage = () => {
                 <Eye className="h-8 w-8 text-indigo-500" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Clicked</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.clickedEmails}</p>
-                  <p className="text-xs text-indigo-600">{emailStats.clickRate.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{emailStats?.clickedEmails || 0}</p>
+                  <p className="text-xs text-indigo-600">{(emailStats?.clickRate || 0).toFixed(1)}%</p>
                 </div>
               </div>
             </div>
@@ -296,7 +296,7 @@ const EmailHistoryPage = () => {
                 <XCircle className="h-8 w-8 text-red-500" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Failed</p>
-                  <p className="text-2xl font-bold text-gray-900">{emailStats.failedEmails}</p>
+                  <p className="text-2xl font-bold text-gray-900">{emailStats?.failedEmails || 0}</p>
                 </div>
               </div>
             </div>
